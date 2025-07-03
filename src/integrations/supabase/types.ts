@@ -21,6 +21,7 @@ export type Database = {
           created_at: string | null
           email: string
           id: string
+          is_platform_admin: boolean | null
           phone: string | null
           postal_code: string | null
           province: string | null
@@ -43,6 +44,7 @@ export type Database = {
           created_at?: string | null
           email: string
           id?: string
+          is_platform_admin?: boolean | null
           phone?: string | null
           postal_code?: string | null
           province?: string | null
@@ -65,6 +67,7 @@ export type Database = {
           created_at?: string | null
           email?: string
           id?: string
+          is_platform_admin?: boolean | null
           phone?: string | null
           postal_code?: string | null
           province?: string | null
@@ -488,6 +491,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      subscribers: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          stripe_customer_id: string | null
+          subscribed: boolean
+          subscription_end: string | null
+          subscription_tier: string | null
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          stripe_customer_id?: string | null
+          subscribed?: boolean
+          subscription_end?: string | null
+          subscription_tier?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          stripe_customer_id?: string | null
+          subscribed?: boolean
+          subscription_end?: string | null
+          subscription_tier?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
       }
       time_entries: {
         Row: {
