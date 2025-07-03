@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 export const TestLoginHelper = () => {
   const { signIn, signUp } = useAuth();
@@ -75,6 +76,36 @@ export const TestLoginHelper = () => {
           description: error.message
         });
       } else {
+        // For contractor accounts, create the contractor profile if it doesn't exist
+        if (account.userData.user_type === 'contractor') {
+          try {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (user) {
+              // Check if contractor profile exists
+              const { data: existingContractor } = await supabase
+                .from('contractors')
+                .select('id')
+                .eq('user_id', user.id)
+                .single();
+
+              if (!existingContractor) {
+                // Create contractor profile
+                await supabase.from('contractors').insert({
+                  user_id: user.id,
+                  email: account.email,
+                  company_name: account.userData.company_name,
+                  contact_name: account.userData.contact_name,
+                  subscription_plan: 'professional',
+                  is_platform_admin: account.userData.is_admin || false
+                });
+                console.log('Created contractor profile');
+              }
+            }
+          } catch (profileError) {
+            console.error('Error creating contractor profile:', profileError);
+          }
+        }
+        
         toast({
           title: 'Success',
           description: `Logged in as ${account.type}`
