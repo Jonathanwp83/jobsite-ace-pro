@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
@@ -9,28 +8,11 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
+import { Job } from '@/types/job';
 
 interface Customer {
   id: string;
   name: string;
-}
-
-interface Job {
-  id?: string;
-  title: string;
-  description: string;
-  customer_id: string;
-  address: string;
-  city: string;
-  province: string;
-  postal_code: string;
-  status: 'pending' | 'in_progress' | 'completed' | 'cancelled';
-  estimated_hours: number;
-  hourly_rate: number;
-  fixed_price: number;
-  start_date: string;
-  end_date: string;
-  notes: string;
 }
 
 interface JobFormProps {
@@ -60,6 +42,8 @@ export const JobForm = ({ job, onSuccess, onCancel }: JobFormProps) => {
     start_date: job?.start_date || '',
     end_date: job?.end_date || '',
     notes: job?.notes || '',
+    id: job?.id || '',
+    created_at: job?.created_at || '',
   });
 
   useEffect(() => {

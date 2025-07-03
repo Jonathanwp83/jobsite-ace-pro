@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
@@ -6,25 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { JobList } from '@/components/JobList';
 import { JobForm } from '@/components/JobForm';
 import { DashboardLayout } from '@/components/DashboardLayout';
-
-interface Job {
-  id: string;
-  title: string;
-  description: string;
-  customer_id: string;
-  address: string;
-  city: string;
-  province: string;
-  postal_code: string;
-  status: 'pending' | 'in_progress' | 'completed' | 'cancelled';
-  estimated_hours: number;
-  hourly_rate: number;
-  fixed_price: number;
-  start_date: string;
-  end_date: string;
-  notes: string;
-  created_at: string;
-}
+import { Job } from '@/types/job';
 
 interface ContractorProfile {
   contact_name: string;

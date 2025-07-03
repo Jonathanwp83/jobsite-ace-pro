@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
@@ -9,25 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Search, Plus, Edit, Trash2, MapPin, Calendar, DollarSign } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-
-interface Job {
-  id: string;
-  title: string;
-  description: string;
-  status: 'pending' | 'in_progress' | 'completed' | 'cancelled';
-  estimated_hours: number;
-  hourly_rate: number;
-  fixed_price: number;
-  start_date: string;
-  end_date: string;
-  address: string;
-  city: string;
-  province: string;
-  customer: {
-    name: string;
-  };
-  created_at: string;
-}
+import { Job, JobWithCustomer } from '@/types/job';
 
 interface JobListProps {
   onAddJob: () => void;
@@ -51,7 +32,7 @@ const statusLabels = {
 export const JobList = ({ onAddJob, onEditJob }: JobListProps) => {
   const { user } = useAuth();
   const { toast } = useToast();
-  const [jobs, setJobs] = useState<Job[]>([]);
+  const [jobs, setJobs] = useState<JobWithCustomer[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
