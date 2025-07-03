@@ -12,6 +12,10 @@ import Customers from '@/pages/Customers';
 import Staff from '@/pages/Staff';
 import TimeTracking from '@/pages/TimeTracking';
 import Subscription from '@/pages/Subscription';
+import Quotes from '@/pages/Quotes';
+import Invoices from '@/pages/Invoices';
+import Files from '@/pages/Files';
+import Analytics from '@/pages/Analytics';
 import NotFound from '@/pages/NotFound';
 
 function App() {
@@ -30,6 +34,10 @@ function App() {
               <Route path="/staff" element={<Staff />} />
               <Route path="/time-tracking" element={<TimeTracking />} />
               <Route path="/subscription" element={<Subscription />} />
+              <Route path="/quotes" element={<Quotes />} />
+              <Route path="/invoices" element={<Invoices />} />
+              <Route path="/files" element={<Files />} />
+              <Route path="/analytics" element={<Analytics />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
             <Toaster />

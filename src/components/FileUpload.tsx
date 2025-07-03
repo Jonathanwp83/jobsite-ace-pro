@@ -13,6 +13,7 @@ interface FileUploadProps {
   accept?: string;
   maxSizeMB?: number;
   multiple?: boolean;
+  disabled?: boolean;
 }
 
 export const FileUpload = ({ 
@@ -20,7 +21,8 @@ export const FileUpload = ({
   bucket = 'job-media',
   accept = 'image/*,video/*',
   maxSizeMB = 10,
-  multiple = false 
+  multiple = false,
+  disabled = false
 }: FileUploadProps) => {
   const [uploading, setUploading] = useState(false);
   const [uploadedFiles, setUploadedFiles] = useState<Array<{ url: string; name: string; type: string }>>([]);
@@ -114,7 +116,7 @@ export const FileUpload = ({
             accept={accept}
             multiple={multiple}
             onChange={handleFileChange}
-            disabled={uploading}
+            disabled={uploading || disabled}
             className="mt-2"
           />
           <p className="text-sm text-muted-foreground mt-1">
