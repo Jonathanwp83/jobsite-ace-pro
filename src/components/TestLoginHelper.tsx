@@ -14,8 +14,8 @@ export const TestLoginHelper = () => {
   const testAccounts = [
     {
       id: 'contractor',
-      email: 'contractor@test.com',
-      password: 'test123',
+      email: 'john.contractor@example.com',
+      password: 'testpass123',
       type: 'Contractor',
       description: 'Access to full dashboard with all features',
       userData: {
@@ -26,8 +26,8 @@ export const TestLoginHelper = () => {
     },
     {
       id: 'staff',
-      email: 'staff@test.com',
-      password: 'test123',
+      email: 'jane.staff@example.com',
+      password: 'testpass123',
       type: 'Staff',
       description: 'Limited access - view jobs and time tracking',
       userData: {
@@ -36,8 +36,8 @@ export const TestLoginHelper = () => {
     },
     {
       id: 'admin',
-      email: 'admin@test.com',
-      password: 'test123',
+      email: 'admin.user@example.com',
+      password: 'testpass123',
       type: 'Admin',
       description: 'Full system access with administrative privileges',
       userData: {
@@ -53,13 +53,22 @@ export const TestLoginHelper = () => {
     setLoading(account.id);
     
     try {
-      // Try to sign up first (in case account doesn't exist)
-      await signUp(account.email, account.password, account.userData);
+      console.log('Attempting to create account:', account.email);
       
-      // Then sign in
+      // Try to sign up first (in case account doesn't exist)
+      const signupResult = await signUp(account.email, account.password, account.userData);
+      console.log('Signup result:', signupResult);
+      
+      // Wait a moment for account creation
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Then try to sign in
+      console.log('Attempting to sign in:', account.email);
       const { error } = await signIn(account.email, account.password);
+      console.log('Sign in result:', { error });
       
       if (error) {
+        console.error('Login error:', error);
         toast({
           variant: 'destructive',
           title: 'Login Error',
