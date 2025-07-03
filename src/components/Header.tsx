@@ -1,6 +1,8 @@
+
 import { LanguageSelector } from '@/components/LanguageSelector';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Button } from '@/components/ui/button';
+import { Link } from 'react-router-dom';
 
 export const Header = () => {
   const { t } = useLanguage();
@@ -35,11 +37,15 @@ export const Header = () => {
         {/* Right side actions */}
         <div className="flex items-center space-x-4">
           <LanguageSelector />
-          <Button variant="professional" size="sm">
-            Sign In
+          <Button variant="professional" size="sm" asChild>
+            <Link to="/auth">
+              Sign In
+            </Link>
           </Button>
-          <Button variant="hero" size="sm">
-            {t('startFreeTrial')}
+          <Button variant="hero" size="sm" asChild>
+            <Link to="/auth">
+              {t('startFreeTrial')}
+            </Link>
           </Button>
         </div>
       </div>
