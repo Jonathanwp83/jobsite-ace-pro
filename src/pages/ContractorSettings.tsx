@@ -26,6 +26,9 @@ interface ContractorSettings {
   quote_prefix: string;
   quote_start_number: number;
   default_invoice_template_id: string;
+  invoice_font_family: string;
+  invoice_font_size: number;
+  invoice_font_weight: string;
 }
 
 export default function ContractorSettings() {
@@ -39,7 +42,10 @@ export default function ContractorSettings() {
     invoice_start_number: 1000,
     quote_prefix: 'QTE',
     quote_start_number: 1000,
-    default_invoice_template_id: ''
+    default_invoice_template_id: '',
+    invoice_font_family: 'Inter',
+    invoice_font_size: 14,
+    invoice_font_weight: '400'
   });
   const [templates, setTemplates] = useState<InvoiceTemplate[]>([]);
   const [loading, setLoading] = useState(true);
@@ -70,7 +76,10 @@ export default function ContractorSettings() {
         invoice_start_number: data.invoice_start_number || 1000,
         quote_prefix: data.quote_prefix || 'QTE',
         quote_start_number: data.quote_start_number || 1000,
-        default_invoice_template_id: data.default_invoice_template_id || ''
+        default_invoice_template_id: data.default_invoice_template_id || '',
+        invoice_font_family: data.invoice_font_family || 'Inter',
+        invoice_font_size: data.invoice_font_size || 14,
+        invoice_font_weight: data.invoice_font_weight || '400'
       });
     } catch (error) {
       console.error('Error fetching profile:', error);

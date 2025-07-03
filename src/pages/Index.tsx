@@ -4,6 +4,8 @@ import { HeroSection } from '@/components/HeroSection';
 import { FeaturesSection } from '@/components/FeaturesSection';
 import { PricingSection } from '@/components/PricingSection';
 import { Footer } from '@/components/Footer';
+import { CookieConsent } from '@/components/CookieConsent';
+import { ChatWidget } from '@/components/ChatWidget';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
@@ -41,6 +43,8 @@ const Index = () => {
         <PricingSection />
       </main>
       <Footer />
+      <CookieConsent />
+      <ChatWidget />
     </div>
   );
 };
