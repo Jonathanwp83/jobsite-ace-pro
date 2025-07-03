@@ -14,7 +14,7 @@ export const TestLoginHelper = () => {
   const testAccounts = [
     {
       id: 'contractor',
-      email: 'john.contractor@example.com',
+      email: 'contractor@contractorpro.com',
       password: 'testpass123',
       type: 'Contractor',
       description: 'Access to full dashboard with all features',
@@ -26,7 +26,7 @@ export const TestLoginHelper = () => {
     },
     {
       id: 'staff',
-      email: 'jane.staff@example.com',
+      email: 'staff@contractorpro.com',
       password: 'testpass123',
       type: 'Staff',
       description: 'Limited access - view jobs and time tracking',
@@ -36,7 +36,7 @@ export const TestLoginHelper = () => {
     },
     {
       id: 'admin',
-      email: 'admin.user@example.com',
+      email: 'admin@contractorpro.com',
       password: 'testpass123',
       type: 'Admin',
       description: 'Full system access with administrative privileges',
