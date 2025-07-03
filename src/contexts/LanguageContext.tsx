@@ -73,6 +73,10 @@ const translations = {
     
     // Footer
     footerTagline: "Built by contractors, for contractors",
+    
+    // Dashboard
+    subscription: "Subscription",
+    manageSubscriptionDescription: "Manage your subscription plan and billing information",
   },
   fr: {
     // Navigation
@@ -136,6 +140,10 @@ const translations = {
     
     // Footer
     footerTagline: "Conçu par des entrepreneurs, pour des entrepreneurs",
+    
+    // Dashboard
+    subscription: "Abonnement",
+    manageSubscriptionDescription: "Gérez votre plan d'abonnement et vos informations de facturation",
   }
 };
 

@@ -14,6 +14,7 @@ import {
   Receipt,
   Upload,
   BarChart3,
+  CreditCard,
   LogOut,
   Menu,
   X
@@ -21,7 +22,7 @@ import {
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
-  profile: {
+  profile?: {
     contact_name: string;
     subscription_plan: string;
   };
@@ -33,6 +34,7 @@ const navigationItems = [
   { name: 'Customers', href: '/customers', icon: Users },
   { name: 'Staff', href: '/staff', icon: Users },
   { name: 'Time Tracking', href: '/time-tracking', icon: Clock },
+  { name: 'Subscription', href: '/subscription', icon: CreditCard },
   { name: 'Quotes', href: '/quotes', icon: FileText },
   { name: 'Invoices', href: '/invoices', icon: Receipt },
   { name: 'Files', href: '/files', icon: Upload },
@@ -84,16 +86,18 @@ export const DashboardLayout = ({ children, profile }: DashboardLayoutProps) => 
           </div>
 
           {/* Profile */}
-          <Card className="m-4">
-            <CardContent className="p-4">
-              <div className="space-y-2">
-                <h3 className="font-medium text-gray-900">{profile.contact_name}</h3>
-                <Badge className={getPlanColor(profile.subscription_plan)}>
-                  {profile.subscription_plan.charAt(0).toUpperCase() + profile.subscription_plan.slice(1)}
-                </Badge>
-              </div>
-            </CardContent>
-          </Card>
+          {profile && (
+            <Card className="m-4">
+              <CardContent className="p-4">
+                <div className="space-y-2">
+                  <h3 className="font-medium text-gray-900">{profile.contact_name}</h3>
+                  <Badge className={getPlanColor(profile.subscription_plan)}>
+                    {profile.subscription_plan.charAt(0).toUpperCase() + profile.subscription_plan.slice(1)}
+                  </Badge>
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Navigation */}
           <nav className="flex-1 px-4 space-y-2">
