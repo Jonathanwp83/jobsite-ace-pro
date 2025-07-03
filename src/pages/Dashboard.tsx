@@ -5,17 +5,14 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
+import { DashboardLayout } from '@/components/DashboardLayout';
 import { 
-  Building2, 
   Users, 
   Calendar, 
   DollarSign, 
   Clock, 
-  FileText,
-  Settings,
-  LogOut
+  FileText
 } from 'lucide-react';
 
 interface ContractorProfile {
@@ -28,10 +25,16 @@ interface ContractorProfile {
 }
 
 const Dashboard = () => {
-  const { user, signOut } = useAuth();
+  const { user } = useAuth();
   const navigate = useNavigate();
   const [profile, setProfile] = useState<ContractorProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState({
+    jobs: 0,
+    customers: 0,
+    staff: 0,
+    revenue: 0
+  });
 
   useEffect(() => {
     if (!user) {
@@ -40,6 +43,7 @@ const Dashboard = () => {
     }
 
     fetchProfile();
+    fetchStats();
   }, [user, navigate]);
 
   const fetchProfile = async () => {
@@ -59,9 +63,47 @@ const Dashboard = () => {
     }
   };
 
-  const handleSignOut = async () => {
-    await signOut();
-    navigate('/');
+  const fetchStats = async () => {
+    if (!user) return;
+
+    try {
+      const { data: contractor } = await supabase
+        .from('contractors')
+        .select('id')
+        .eq('user_id', user.id)
+        .single();
+
+      if (!contractor) return;
+
+      // Fetch job count
+      const { count: jobCount } = await supabase
+        .from('jobs')
+        .select('*', { count: 'exact', head: true })
+        .eq('contractor_id', contractor.id)
+        .neq('status', 'cancelled');
+
+      // Fetch customer count
+      const { count: customerCount } = await supabase
+        .from('customers')
+        .select('*', { count: 'exact', head: true })
+        .eq('contractor_id', contractor.id);
+
+      // Fetch staff count
+      const { count: staffCount } = await supabase
+        .from('staff')
+        .select('*', { count: 'exact', head: true })
+        .eq('contractor_id', contractor.id)
+        .eq('is_active', true);
+
+      setStats({
+        jobs: jobCount || 0,
+        customers: customerCount || 0,
+        staff: staffCount || 0,
+        revenue: 0 // TODO: Calculate from invoices
+      });
+    } catch (error) {
+      console.error('Error fetching stats:', error);
+    }
   };
 
   if (loading) {
@@ -96,225 +138,124 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center">
-              <Building2 className="h-8 w-8 text-blue-600" />
-              <span className="ml-2 text-xl font-bold text-gray-900">ContractorPro</span>
-            </div>
-            <div className="flex items-center space-x-4">
-              <Badge variant="secondary" className="capitalize">
-                {profile.subscription_plan} Plan
-              </Badge>
-              <span className="text-sm text-gray-600">
-                {profile.contact_name}
-              </span>
-              <Button variant="ghost" size="sm" onClick={handleSignOut}>
-                <LogOut className="h-4 w-4" />
+    <DashboardLayout profile={profile}>
+      {/* Welcome Section */}
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-gray-900">
+          Welcome back, {profile.contact_name}!
+        </h1>
+        <p className="text-gray-600 mt-2">
+          Manage your contracting business with {profile.company_name}
+        </p>
+      </div>
+
+      {/* Quick Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Active Jobs</CardTitle>
+            <Calendar className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.jobs}</div>
+            <p className="text-xs text-muted-foreground">
+              {stats.jobs === 0 ? 'No active jobs yet' : 'jobs in progress'}
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Customers</CardTitle>
+            <Users className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.customers}</div>
+            <p className="text-xs text-muted-foreground">
+              {stats.customers === 0 ? 'No customers yet' : 'total customers'}
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Staff Members</CardTitle>
+            <Users className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.staff}</div>
+            <p className="text-xs text-muted-foreground">
+              of {profile.staff_limit} allowed
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Monthly Revenue</CardTitle>
+            <DollarSign className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">${stats.revenue}</div>
+            <p className="text-xs text-muted-foreground">This month</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Getting Started Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>Getting Started</CardTitle>
+            <CardDescription>
+              Complete these steps to set up your contractor business
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-center justify-between">
+              <span className="text-sm">Add your first customer</span>
+              <Button size="sm" variant="outline" onClick={() => navigate('/customers')}>
+                Add Customer
               </Button>
             </div>
-          </div>
-        </div>
-      </header>
-
-      {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Welcome Section */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">
-            Welcome back, {profile.contact_name}!
-          </h1>
-          <p className="text-gray-600 mt-2">
-            Manage your contracting business with {profile.company_name}
-          </p>
-        </div>
-
-        {/* Quick Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Active Jobs</CardTitle>
-              <Calendar className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">0</div>
-              <p className="text-xs text-muted-foreground">No active jobs yet</p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Staff Members</CardTitle>
-              <Users className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">0</div>
-              <p className="text-xs text-muted-foreground">
-                of {profile.staff_limit} allowed
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Monthly Revenue</CardTitle>
-              <DollarSign className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">$0</div>
-              <p className="text-xs text-muted-foreground">No invoices yet</p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Hours Tracked</CardTitle>
-              <Clock className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">0</div>
-              <p className="text-xs text-muted-foreground">This month</p>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Main Dashboard Tabs */}
-        <Tabs defaultValue="overview" className="space-y-6">
-          <TabsList>
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="jobs">Jobs</TabsTrigger>
-            <TabsTrigger value="staff">Staff</TabsTrigger>
-            <TabsTrigger value="customers">Customers</TabsTrigger>
-            <TabsTrigger value="billing">Billing</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="overview" className="space-y-6">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Getting Started</CardTitle>
-                  <CardDescription>
-                    Complete these steps to set up your contractor business
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm">Add your first customer</span>
-                    <Button size="sm" variant="outline">Add Customer</Button>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm">Create your first job</span>
-                    <Button size="sm" variant="outline">Create Job</Button>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm">Invite staff members</span>
-                    <Button size="sm" variant="outline">Invite Staff</Button>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm">Set up billing information</span>
-                    <Button size="sm" variant="outline">Setup Billing</Button>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle>Recent Activity</CardTitle>
-                  <CardDescription>
-                    Your latest business activities
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-center text-gray-500 py-8">
-                    <FileText className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-                    <p>No recent activity</p>
-                    <p className="text-sm">Activity will appear here as you use the system</p>
-                  </div>
-                </CardContent>
-              </Card>
+            <div className="flex items-center justify-between">
+              <span className="text-sm">Create your first job</span>
+              <Button size="sm" variant="outline" onClick={() => navigate('/jobs')}>
+                Create Job
+              </Button>
             </div>
-          </TabsContent>
+            <div className="flex items-center justify-between">
+              <span className="text-sm">Invite staff members</span>
+              <Button size="sm" variant="outline" disabled>
+                Coming Soon
+              </Button>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-sm">Set up billing information</span>
+              <Button size="sm" variant="outline" disabled>
+                Coming Soon
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
 
-          <TabsContent value="jobs">
-            <Card>
-              <CardHeader>
-                <CardTitle>Jobs Management</CardTitle>
-                <CardDescription>
-                  Manage your construction jobs and projects
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="text-center py-8">
-                  <Calendar className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-                  <p className="text-gray-500">No jobs created yet</p>
-                  <Button className="mt-4">Create Your First Job</Button>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="staff">
-            <Card>
-              <CardHeader>
-                <CardTitle>Staff Management</CardTitle>
-                <CardDescription>
-                  Manage your team members and their permissions
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="text-center py-8">
-                  <Users className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-                  <p className="text-gray-500">No staff members yet</p>
-                  <p className="text-sm text-gray-400 mb-4">
-                    You can add up to {profile.staff_limit} staff members on your {profile.subscription_plan} plan
-                  </p>
-                  <Button className="mt-4">Invite Staff Member</Button>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="customers">
-            <Card>
-              <CardHeader>
-                <CardTitle>Customer Management</CardTitle>
-                <CardDescription>
-                  Manage your customer database and contact information
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="text-center py-8">
-                  <Building2 className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-                  <p className="text-gray-500">No customers added yet</p>
-                  <Button className="mt-4">Add Your First Customer</Button>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="billing">
-            <Card>
-              <CardHeader>
-                <CardTitle>Billing & Invoices</CardTitle>
-                <CardDescription>
-                  Manage quotes, invoices, and payments
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="text-center py-8">
-                  <DollarSign className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-                  <p className="text-gray-500">No invoices created yet</p>
-                  <Button className="mt-4">Create Your First Invoice</Button>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
-      </main>
-    </div>
+        <Card>
+          <CardHeader>
+            <CardTitle>Recent Activity</CardTitle>
+            <CardDescription>
+              Your latest business activities
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="text-center text-gray-500 py-8">
+              <FileText className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+              <p>No recent activity</p>
+              <p className="text-sm">Activity will appear here as you use the system</p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    </DashboardLayout>
   );
 };
 
