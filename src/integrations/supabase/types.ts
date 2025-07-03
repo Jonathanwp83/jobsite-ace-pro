@@ -9,6 +9,39 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      chats: {
+        Row: {
+          created_at: string | null
+          id: string
+          message: string
+          response: string | null
+          status: string | null
+          updated_at: string | null
+          visitor_email: string | null
+          visitor_name: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          message: string
+          response?: string | null
+          status?: string | null
+          updated_at?: string | null
+          visitor_email?: string | null
+          visitor_name?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          message?: string
+          response?: string | null
+          status?: string | null
+          updated_at?: string | null
+          visitor_email?: string | null
+          visitor_name?: string | null
+        }
+        Relationships: []
+      }
       contractors: {
         Row: {
           address: string | null
@@ -19,12 +52,17 @@ export type Database = {
           company_name: string
           contact_name: string
           created_at: string | null
+          default_invoice_template_id: string | null
           email: string
           id: string
+          invoice_prefix: string | null
+          invoice_start_number: number | null
           is_platform_admin: boolean | null
           phone: string | null
           postal_code: string | null
           province: string | null
+          quote_prefix: string | null
+          quote_start_number: number | null
           staff_limit: number
           subscription_active: boolean | null
           subscription_expires_at: string | null
@@ -42,12 +80,17 @@ export type Database = {
           company_name: string
           contact_name: string
           created_at?: string | null
+          default_invoice_template_id?: string | null
           email: string
           id?: string
+          invoice_prefix?: string | null
+          invoice_start_number?: number | null
           is_platform_admin?: boolean | null
           phone?: string | null
           postal_code?: string | null
           province?: string | null
+          quote_prefix?: string | null
+          quote_start_number?: number | null
           staff_limit?: number
           subscription_active?: boolean | null
           subscription_expires_at?: string | null
@@ -65,12 +108,17 @@ export type Database = {
           company_name?: string
           contact_name?: string
           created_at?: string | null
+          default_invoice_template_id?: string | null
           email?: string
           id?: string
+          invoice_prefix?: string | null
+          invoice_start_number?: number | null
           is_platform_admin?: boolean | null
           phone?: string | null
           postal_code?: string | null
           province?: string | null
+          quote_prefix?: string | null
+          quote_start_number?: number | null
           staff_limit?: number
           subscription_active?: boolean | null
           subscription_expires_at?: string | null
@@ -79,7 +127,15 @@ export type Database = {
           updated_at?: string | null
           user_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "contractors_default_invoice_template_id_fkey"
+            columns: ["default_invoice_template_id"]
+            isOneToOne: false
+            referencedRelation: "invoice_templates"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       customers: {
         Row: {
@@ -133,6 +189,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      invoice_templates: {
+        Row: {
+          created_at: string | null
+          css_styles: string | null
+          description: string | null
+          html_template: string
+          id: string
+          is_default: boolean | null
+          name: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          css_styles?: string | null
+          description?: string | null
+          html_template: string
+          id?: string
+          is_default?: boolean | null
+          name: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          css_styles?: string | null
+          description?: string | null
+          html_template?: string
+          id?: string
+          is_default?: boolean | null
+          name?: string
+          updated_at?: string | null
+        }
+        Relationships: []
       }
       invoices: {
         Row: {
@@ -601,6 +690,27 @@ export type Database = {
           },
         ]
       }
+      user_roles: {
+        Row: {
+          created_at: string | null
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -614,8 +724,20 @@ export type Database = {
         Args: { user_id: string }
         Returns: string
       }
+      get_user_role: {
+        Args: { _user_id: string }
+        Returns: Database["public"]["Enums"]["app_role"]
+      }
+      has_role: {
+        Args: {
+          _user_id: string
+          _role: Database["public"]["Enums"]["app_role"]
+        }
+        Returns: boolean
+      }
     }
     Enums: {
+      app_role: "admin" | "contractor" | "staff"
       invoice_status: "draft" | "sent" | "paid" | "overdue" | "cancelled"
       job_status: "pending" | "in_progress" | "completed" | "cancelled"
       subscription_plan: "starter" | "professional" | "enterprise"
@@ -736,6 +858,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      app_role: ["admin", "contractor", "staff"],
       invoice_status: ["draft", "sent", "paid", "overdue", "cancelled"],
       job_status: ["pending", "in_progress", "completed", "cancelled"],
       subscription_plan: ["starter", "professional", "enterprise"],

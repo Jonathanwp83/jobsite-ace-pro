@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
+import { useRole } from '@/hooks/useRole';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -17,7 +18,9 @@ import {
   CreditCard,
   LogOut,
   Menu,
-  X
+  X,
+  Settings,
+  Shield
 } from 'lucide-react';
 
 interface DashboardLayoutProps {
@@ -28,24 +31,33 @@ interface DashboardLayoutProps {
   };
 }
 
-const navigationItems = [
-  { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-  { name: 'Jobs', href: '/jobs', icon: Briefcase },
-  { name: 'Customers', href: '/customers', icon: Users },
-  { name: 'Staff', href: '/staff', icon: Users },
-  { name: 'Time Tracking', href: '/time-tracking', icon: Clock },
-  { name: 'Subscription', href: '/subscription', icon: CreditCard },
-  { name: 'Quotes', href: '/quotes', icon: FileText },
-  { name: 'Invoices', href: '/invoices', icon: Receipt },
-  { name: 'Files', href: '/files', icon: Upload },
-  { name: 'Analytics', href: '/analytics', icon: BarChart3 },
-];
+const getNavigationItems = (userRole: string | null) => {
+  const baseItems = [
+    { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard, roles: ['admin', 'contractor', 'staff'] },
+    { name: 'Jobs', href: '/jobs', icon: Briefcase, roles: ['contractor', 'staff'] },
+    { name: 'Customers', href: '/customers', icon: Users, roles: ['contractor'] },
+    { name: 'Staff', href: '/staff', icon: Users, roles: ['contractor'] },
+    { name: 'Time Tracking', href: '/time-tracking', icon: Clock, roles: ['contractor', 'staff'] },
+    { name: 'Subscription', href: '/subscription', icon: CreditCard, roles: ['contractor'] },
+    { name: 'Quotes', href: '/quotes', icon: FileText, roles: ['contractor'] },
+    { name: 'Invoices', href: '/invoices', icon: Receipt, roles: ['contractor'] },
+    { name: 'Files', href: '/files', icon: Upload, roles: ['contractor', 'staff'] },
+    { name: 'Analytics', href: '/analytics', icon: BarChart3, roles: ['contractor'] },
+    { name: 'Settings', href: '/settings', icon: Settings, roles: ['contractor'] },
+    { name: 'Admin Panel', href: '/admin', icon: Shield, roles: ['admin'] },
+  ];
+
+  return baseItems.filter(item => item.roles.includes(userRole || ''));
+};
 
 export const DashboardLayout = ({ children, profile }: DashboardLayoutProps) => {
   const location = useLocation();
   const navigate = useNavigate();
   const { signOut } = useAuth();
+  const { userRole } = useRole();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  
+  const navigationItems = getNavigationItems(userRole);
 
   const handleSignOut = async () => {
     await signOut();

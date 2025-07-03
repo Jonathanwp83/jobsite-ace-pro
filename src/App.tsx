@@ -1,6 +1,7 @@
 
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from '@/hooks/useAuth';
+import { RoleProvider } from '@/hooks/useRole';
 import { LanguageProvider } from '@/contexts/LanguageContext';
 import { SubscriptionProvider } from '@/hooks/useSubscription';
 import { Toaster } from '@/components/ui/toaster';
@@ -16,34 +17,40 @@ import Quotes from '@/pages/Quotes';
 import Invoices from '@/pages/Invoices';
 import Files from '@/pages/Files';
 import Analytics from '@/pages/Analytics';
+import AdminDashboard from '@/pages/AdminDashboard';
+import ContractorSettings from '@/pages/ContractorSettings';
 import NotFound from '@/pages/NotFound';
 
 function App() {
   return (
     <LanguageProvider>
       <AuthProvider>
-        <SubscriptionProvider>
-        <Router>
-          <div className="min-h-screen bg-gray-50">
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/auth" element={<Auth />} />
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/jobs" element={<Jobs />} />
-              <Route path="/customers" element={<Customers />} />
-              <Route path="/staff" element={<Staff />} />
-              <Route path="/time-tracking" element={<TimeTracking />} />
-              <Route path="/subscription" element={<Subscription />} />
-              <Route path="/quotes" element={<Quotes />} />
-              <Route path="/invoices" element={<Invoices />} />
-              <Route path="/files" element={<Files />} />
-              <Route path="/analytics" element={<Analytics />} />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-            <Toaster />
-          </div>
-        </Router>
-        </SubscriptionProvider>
+        <RoleProvider>
+          <SubscriptionProvider>
+          <Router>
+            <div className="min-h-screen bg-gray-50">
+              <Routes>
+                <Route path="/" element={<Index />} />
+                <Route path="/auth" element={<Auth />} />
+                <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/admin" element={<AdminDashboard />} />
+                <Route path="/jobs" element={<Jobs />} />
+                <Route path="/customers" element={<Customers />} />
+                <Route path="/staff" element={<Staff />} />
+                <Route path="/time-tracking" element={<TimeTracking />} />
+                <Route path="/subscription" element={<Subscription />} />
+                <Route path="/quotes" element={<Quotes />} />
+                <Route path="/invoices" element={<Invoices />} />
+                <Route path="/files" element={<Files />} />
+                <Route path="/analytics" element={<Analytics />} />
+                <Route path="/settings" element={<ContractorSettings />} />
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+              <Toaster />
+            </div>
+          </Router>
+          </SubscriptionProvider>
+        </RoleProvider>
       </AuthProvider>
     </LanguageProvider>
   );

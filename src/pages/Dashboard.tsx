@@ -1,6 +1,7 @@
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
+import { useRole } from '@/hooks/useRole';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -26,6 +27,7 @@ interface ContractorProfile {
 
 const Dashboard = () => {
   const { user } = useAuth();
+  const { userRole, isAdmin } = useRole();
   const navigate = useNavigate();
   const [profile, setProfile] = useState<ContractorProfile | null>(null);
   const [loading, setLoading] = useState(true);
@@ -41,10 +43,13 @@ const Dashboard = () => {
       navigate('/auth');
       return;
     }
-
+    if (isAdmin) {
+      navigate('/admin');
+      return;
+    }
     fetchProfile();
     fetchStats();
-  }, [user, navigate]);
+  }, [user, isAdmin, navigate]);
 
   const fetchProfile = async () => {
     try {
