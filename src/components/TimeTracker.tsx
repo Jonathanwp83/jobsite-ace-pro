@@ -9,14 +9,18 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Play, Pause, Square, Clock } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { TimeEntryWithDetails } from '@/types/timeEntry';
-import { Job } from '@/types/job';
 import { Staff } from '@/types/staff';
+
+interface JobOption {
+  id: string;
+  title: string;
+}
 
 export const TimeTracker = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const [timeEntries, setTimeEntries] = useState<TimeEntryWithDetails[]>([]);
-  const [jobs, setJobs] = useState<Job[]>([]);
+  const [jobs, setJobs] = useState<JobOption[]>([]);
   const [staff, setStaff] = useState<Staff[]>([]);
   const [selectedJobId, setSelectedJobId] = useState('');
   const [selectedStaffId, setSelectedStaffId] = useState('');
@@ -39,13 +43,13 @@ export const TimeTracker = () => {
 
       if (!contractor) return;
 
-      // Fetch jobs
+      // Fetch jobs - only select id and title
       const { data: jobsData } = await supabase
         .from('jobs')
         .select('id, title')
         .eq('contractor_id', contractor.id);
 
-      // Fetch staff
+      // Fetch staff with proper type transformation
       const { data: staffData } = await supabase
         .from('staff')
         .select('*')
@@ -65,7 +69,16 @@ export const TimeTracker = () => {
         .limit(10);
 
       setJobs(jobsData || []);
-      setStaff(staffData || []);
+      
+      // Transform staff data to match our Staff type
+      const transformedStaff: Staff[] = (staffData || []).map(item => ({
+        ...item,
+        permissions: typeof item.permissions === 'object' && item.permissions !== null 
+          ? item.permissions as { can_view_jobs: boolean; can_edit_jobs: boolean }
+          : { can_view_jobs: true, can_edit_jobs: false }
+      }));
+      setStaff(transformedStaff);
+      
       setTimeEntries(entriesData || []);
       
       // Find active entry

@@ -45,7 +45,16 @@ export const StaffList = ({ onAddStaff, onEditStaff }: StaffListProps) => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setStaff(data || []);
+      
+      // Transform the data to match our Staff type
+      const transformedStaff: Staff[] = (data || []).map(item => ({
+        ...item,
+        permissions: typeof item.permissions === 'object' && item.permissions !== null 
+          ? item.permissions as { can_view_jobs: boolean; can_edit_jobs: boolean }
+          : { can_view_jobs: true, can_edit_jobs: false }
+      }));
+      
+      setStaff(transformedStaff);
     } catch (error) {
       console.error('Error fetching staff:', error);
       toast({
