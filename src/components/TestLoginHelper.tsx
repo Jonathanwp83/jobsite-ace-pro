@@ -33,6 +33,19 @@ export const TestLoginHelper = () => {
       userData: {
         user_type: 'staff'
       }
+    },
+    {
+      id: 'admin',
+      email: 'admin@test.com',
+      password: 'test123',
+      type: 'Admin',
+      description: 'Full system access with administrative privileges',
+      userData: {
+        user_type: 'contractor',
+        company_name: 'Admin Construction Ltd.',
+        contact_name: 'Admin User',
+        is_admin: true
+      }
     }
   ];
 
@@ -115,6 +128,7 @@ export const TestLoginHelper = () => {
         <ul className="text-sm text-blue-800 space-y-1">
           <li><strong>Contractor:</strong> Full dashboard with jobs, customers, staff management, time tracking</li>
           <li><strong>Staff:</strong> Limited dashboard focused on time tracking and assigned jobs</li>
+          <li><strong>Admin:</strong> Full system access with administrative privileges and oversight</li>
         </ul>
       </div>
     </div>
