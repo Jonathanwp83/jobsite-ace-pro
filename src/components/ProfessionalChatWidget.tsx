@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { LanguageSelector } from '@/components/LanguageSelector';
 import { 
   MessageCircle, 
   X, 
@@ -16,7 +17,11 @@ import {
   ShoppingCart,
   User,
   ArrowLeft,
-  Building2
+  Building2,
+  ArrowRight,
+  MoreHorizontal,
+  Minus,
+  Bot
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -137,6 +142,18 @@ export const ProfessionalChatWidget = () => {
     }
   };
 
+  const minimizeChat = () => {
+    setIsOpen(false);
+  };
+
+  const emailTranscript = () => {
+    // Placeholder for email transcript functionality
+    toast({
+      title: "Feature Coming Soon",
+      description: "Email transcript feature will be available soon.",
+    });
+  };
+
   return (
     <>
       {/* Professional Chat Button */}
@@ -150,49 +167,75 @@ export const ProfessionalChatWidget = () => {
 
       {/* Chat Dialog */}
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
-        <DialogContent className="max-w-md p-0 gap-0">
+        <DialogContent className="max-w-sm p-0 gap-0 rounded-[10px] border-0 shadow-2xl">
           {/* Header */}
-          <div className="bg-blue-600 text-white p-4 rounded-t-lg">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-3">
+          <div className="bg-white border-b border-gray-200 p-3 rounded-t-[10px]">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center space-x-2">
                 {(currentScreen === 'categories' || currentScreen === 'form') && (
                   <Button
                     variant="ghost"
                     size="sm"
                     onClick={goBack}
-                    className="h-8 w-8 p-0 text-white hover:bg-blue-700"
+                    className="h-8 w-8 p-0 text-gray-600 hover:bg-gray-100"
                   >
                     <ArrowLeft className="h-4 w-4" />
                   </Button>
                 )}
-                <div className="flex items-center space-x-2">
-                  <Building2 className="h-6 w-6" />
-                  <div>
-                    <h3 className="font-semibold text-lg">ContractorPro</h3>
-                    <p className="text-blue-100 text-xs">Support Team</p>
-                  </div>
+                <LanguageSelector />
+              </div>
+              <div className="flex items-center space-x-1">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={emailTranscript}
+                  className="h-8 w-8 p-0 text-gray-600 hover:bg-gray-100"
+                >
+                  <MoreHorizontal className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={minimizeChat}
+                  className="h-8 w-8 p-0 text-gray-600 hover:bg-gray-100"
+                >
+                  <Minus className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setIsOpen(false)}
+                  className="h-8 w-8 p-0 text-gray-600 hover:bg-gray-100"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+            
+            {/* Chat Assistant Info */}
+            <div className="flex items-center space-x-3">
+              <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                <Bot className="h-6 w-6 text-blue-600" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-gray-900">ContractorPro Assistant</h3>
+                <div className="flex items-center space-x-2 mt-1">
+                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                  <span className="text-xs text-gray-600">Average response time: 3 minutes</span>
                 </div>
               </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setIsOpen(false)}
-                className="h-8 w-8 p-0 text-white hover:bg-blue-700"
-              >
-                <X className="h-4 w-4" />
-              </Button>
             </div>
           </div>
 
           {/* Content */}
-          <div className="p-6">
+          <div className="p-6 bg-white min-h-[300px] flex flex-col">
             {currentScreen === 'welcome' && (
-              <div className="text-center space-y-6">
-                <div className="mx-auto w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center">
-                  <Building2 className="h-10 w-10 text-blue-600" />
+              <div className="text-center space-y-6 flex-1 flex flex-col justify-center">
+                <div className="mx-auto w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center">
+                  <Building2 className="h-8 w-8 text-blue-600" />
                 </div>
                 <div>
-                  <h2 className="text-2xl font-bold text-gray-900 mb-2">
+                  <h2 className="text-xl font-bold text-gray-900 mb-2">
                     Welcome to ContractorPro Support
                   </h2>
                   <p className="text-gray-600 text-sm leading-relaxed">
@@ -202,10 +245,11 @@ export const ProfessionalChatWidget = () => {
                 </div>
                 <Button 
                   onClick={() => setCurrentScreen('categories')} 
-                  className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 text-lg font-medium"
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 text-base font-medium flex items-center justify-center space-x-2"
                   size="lg"
                 >
-                  Chat Now
+                  <span>Chat Now</span>
+                  <ArrowRight className="h-4 w-4" />
                 </Button>
                 <div className="text-xs text-gray-500">
                   Typically replies within a few minutes
@@ -214,9 +258,9 @@ export const ProfessionalChatWidget = () => {
             )}
 
             {currentScreen === 'categories' && (
-              <div className="space-y-4">
+              <div className="space-y-4 flex-1">
                 <div className="text-center mb-6">
-                  <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">
                     How can we help you today?
                   </h3>
                   <p className="text-gray-600 text-sm">
@@ -224,7 +268,7 @@ export const ProfessionalChatWidget = () => {
                   </p>
                 </div>
                 
-                <div className="space-y-3">
+                <div className="space-y-3 flex-1">
                   {categories.map((cat) => {
                     const Icon = cat.icon;
                     return (
@@ -252,9 +296,9 @@ export const ProfessionalChatWidget = () => {
             )}
 
             {currentScreen === 'form' && (
-              <div className="space-y-4">
+              <div className="space-y-4 flex-1">
                 <div className="text-center mb-6">
-                  <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">
                     {categories.find(c => c.value === selectedCategory)?.label} Support
                   </h3>
                   <p className="text-gray-600 text-sm">
@@ -300,7 +344,7 @@ export const ProfessionalChatWidget = () => {
                 <Button
                   onClick={handleSubmit}
                   disabled={isSubmitting}
-                  className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3"
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 mt-4"
                   size="lg"
                 >
                   <Send className="mr-2 h-4 w-4" />
@@ -310,12 +354,12 @@ export const ProfessionalChatWidget = () => {
             )}
 
             {currentScreen === 'sent' && (
-              <div className="text-center space-y-6">
-                <div className="mx-auto w-20 h-20 bg-green-100 rounded-full flex items-center justify-center">
-                  <Send className="h-10 w-10 text-green-600" />
+              <div className="text-center space-y-6 flex-1 flex flex-col justify-center">
+                <div className="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
+                  <Send className="h-8 w-8 text-green-600" />
                 </div>
                 <div>
-                  <h3 className="text-xl font-semibold text-gray-900 mb-2">Message Sent!</h3>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">Message Sent!</h3>
                   <p className="text-gray-600 text-sm leading-relaxed">
                     Thank you for contacting ContractorPro support. We've received your message 
                     and will respond to <strong>{formData.email}</strong> within 24 hours.
@@ -333,6 +377,13 @@ export const ProfessionalChatWidget = () => {
                 </Button>
               </div>
             )}
+          </div>
+
+          {/* Footer */}
+          <div className="bg-white border-t border-gray-200 p-3 rounded-b-[10px]">
+            <div className="text-center text-xs text-gray-500">
+              Powered by ContractorPro
+            </div>
           </div>
         </DialogContent>
       </Dialog>
