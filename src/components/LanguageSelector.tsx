@@ -1,4 +1,5 @@
-import { ChevronDown } from 'lucide-react';
+
+import { ChevronDown, Globe } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Button } from '@/components/ui/button';
 import {
@@ -14,9 +15,8 @@ export const LanguageSelector = () => {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="sm" className="gap-1">
-          <span className="text-2xl">{language === 'en' ? '🇺🇸' : '🇫🇷'}</span>
-          <span className="uppercase font-medium">{language}</span>
+        <Button variant="ghost" size="sm" className="gap-1 px-2">
+          <Globe className="h-4 w-4" />
           <ChevronDown className="h-3 w-3" />
         </Button>
       </DropdownMenuTrigger>

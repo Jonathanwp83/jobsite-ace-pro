@@ -169,7 +169,7 @@ export const ProfessionalChatWidget = () => {
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
         <DialogContent className="max-w-sm p-0 gap-0 rounded-[10px] border-0 shadow-2xl">
           {/* Header */}
-          <div className="bg-white border-b border-gray-200 p-3 rounded-t-[10px]">
+          <div className="bg-white p-3 rounded-t-[10px]">
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center space-x-2">
                 {(currentScreen === 'categories' || currentScreen === 'form') && (
@@ -382,7 +382,7 @@ export const ProfessionalChatWidget = () => {
           {/* Footer */}
           <div className="bg-white border-t border-gray-200 p-3 rounded-b-[10px]">
             <div className="text-center text-xs text-gray-500">
-              Powered by ContractorPro
+              Powered by <span className="font-bold">Contractor Pro</span>
             </div>
           </div>
         </DialogContent>
