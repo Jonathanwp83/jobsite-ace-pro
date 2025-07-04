@@ -55,6 +55,9 @@ export type Database = {
           default_invoice_template_id: string | null
           email: string
           id: string
+          invoice_font_family: string | null
+          invoice_font_size: number | null
+          invoice_font_weight: string | null
           invoice_prefix: string | null
           invoice_start_number: number | null
           is_platform_admin: boolean | null
@@ -83,6 +86,9 @@ export type Database = {
           default_invoice_template_id?: string | null
           email: string
           id?: string
+          invoice_font_family?: string | null
+          invoice_font_size?: number | null
+          invoice_font_weight?: string | null
           invoice_prefix?: string | null
           invoice_start_number?: number | null
           is_platform_admin?: boolean | null
@@ -111,6 +117,9 @@ export type Database = {
           default_invoice_template_id?: string | null
           email?: string
           id?: string
+          invoice_font_family?: string | null
+          invoice_font_size?: number | null
+          invoice_font_weight?: string | null
           invoice_prefix?: string | null
           invoice_start_number?: number | null
           is_platform_admin?: boolean | null
