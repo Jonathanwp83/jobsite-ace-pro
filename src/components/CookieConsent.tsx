@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -54,7 +55,7 @@ export const CookieConsent = () => {
   if (!showConsent) return null;
 
   return (
-    <div className="fixed bottom-4 left-4 right-4 z-50 md:left-auto md:right-4 md:max-w-md">
+    <div className="fixed bottom-4 left-4 z-50 max-w-sm">
       <Card className="shadow-lg border-2">
         <CardContent className="p-4">
           <div className="flex items-start justify-between mb-3">
@@ -77,18 +78,18 @@ export const CookieConsent = () => {
             Choose your preferences below.
           </p>
 
-          <div className="flex flex-col sm:flex-row gap-2">
+          <div className="flex flex-col gap-2">
             <Button
               onClick={acceptAll}
               size="sm"
-              className="flex-1"
+              className="w-full"
             >
               Accept All
             </Button>
             
             <Dialog>
               <DialogTrigger asChild>
-                <Button variant="outline" size="sm" className="flex-1">
+                <Button variant="outline" size="sm" className="w-full">
                   <Settings className="mr-2 h-4 w-4" />
                   Customize
                 </Button>

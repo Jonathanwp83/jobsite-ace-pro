@@ -9,32 +9,89 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      chat_agents: {
+        Row: {
+          categories: string[] | null
+          created_at: string | null
+          current_chat_count: number | null
+          email: string
+          id: string
+          is_online: boolean | null
+          max_concurrent_chats: number | null
+          name: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          categories?: string[] | null
+          created_at?: string | null
+          current_chat_count?: number | null
+          email: string
+          id?: string
+          is_online?: boolean | null
+          max_concurrent_chats?: number | null
+          name: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          categories?: string[] | null
+          created_at?: string | null
+          current_chat_count?: number | null
+          email?: string
+          id?: string
+          is_online?: boolean | null
+          max_concurrent_chats?: number | null
+          name?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       chats: {
         Row: {
+          agent_response_time: unknown | null
+          assigned_agent_id: string | null
+          category: string | null
           created_at: string | null
           id: string
+          is_resolved: boolean | null
           message: string
+          priority: number | null
           response: string | null
+          session_id: string | null
           status: string | null
           updated_at: string | null
           visitor_email: string | null
           visitor_name: string | null
         }
         Insert: {
+          agent_response_time?: unknown | null
+          assigned_agent_id?: string | null
+          category?: string | null
           created_at?: string | null
           id?: string
+          is_resolved?: boolean | null
           message: string
+          priority?: number | null
           response?: string | null
+          session_id?: string | null
           status?: string | null
           updated_at?: string | null
           visitor_email?: string | null
           visitor_name?: string | null
         }
         Update: {
+          agent_response_time?: unknown | null
+          assigned_agent_id?: string | null
+          category?: string | null
           created_at?: string | null
           id?: string
+          is_resolved?: boolean | null
           message?: string
+          priority?: number | null
           response?: string | null
+          session_id?: string | null
           status?: string | null
           updated_at?: string | null
           visitor_email?: string | null
