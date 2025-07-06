@@ -9,6 +9,7 @@ import { LanguageSelector } from '@/components/LanguageSelector';
 import { MessageCircle, X, Send, Headphones, CreditCard, Wrench, ShoppingCart, User, ArrowLeft, Building2, ArrowRight, MoreHorizontal, Minus, Bot } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+
 export const ProfessionalChatWidget = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [currentScreen, setCurrentScreen] = useState<'welcome' | 'categories' | 'form' | 'sent'>('welcome');
@@ -22,6 +23,7 @@ export const ProfessionalChatWidget = () => {
   const {
     toast
   } = useToast();
+
   const categories = [{
     value: 'sales',
     label: 'Sales',
@@ -53,10 +55,12 @@ export const ProfessionalChatWidget = () => {
     description: 'Connect with a human agent',
     color: 'bg-red-50 text-red-700 border-red-200'
   }];
+
   const handleCategorySelect = (category: string) => {
     setSelectedCategory(category);
     setCurrentScreen('form');
   };
+
   const handleSubmit = async () => {
     if (!formData.name.trim() || !formData.email.trim() || !formData.message.trim()) {
       toast({
@@ -97,6 +101,7 @@ export const ProfessionalChatWidget = () => {
       setIsSubmitting(false);
     }
   };
+
   const resetChat = () => {
     setCurrentScreen('welcome');
     setSelectedCategory('');
@@ -107,6 +112,7 @@ export const ProfessionalChatWidget = () => {
     });
     setIsOpen(false);
   };
+
   const goBack = () => {
     if (currentScreen === 'form') {
       setCurrentScreen('categories');
@@ -114,9 +120,11 @@ export const ProfessionalChatWidget = () => {
       setCurrentScreen('welcome');
     }
   };
+
   const minimizeChat = () => {
     setIsOpen(false);
   };
+
   const emailTranscript = () => {
     // Placeholder for email transcript functionality
     toast({
@@ -124,9 +132,15 @@ export const ProfessionalChatWidget = () => {
       description: "Email transcript feature will be available soon."
     });
   };
-  return <>
+
+  return (
+    <>
       {/* Professional Chat Button */}
-      <Button onClick={() => setIsOpen(true)} className="fixed bottom-6 right-6 h-16 w-16 rounded-full shadow-2xl z-40 bg-blue-600 hover:bg-blue-700 transition-all duration-300 hover:scale-110" size="lg">
+      <Button
+        onClick={() => setIsOpen(true)}
+        className="fixed bottom-6 right-6 h-16 w-16 rounded-full shadow-2xl z-40 bg-blue-600 hover:bg-blue-700 transition-all duration-300 hover:scale-110"
+        size="lg"
+      >
         <MessageCircle className="h-7 w-7" />
       </Button>
 
@@ -137,19 +151,43 @@ export const ProfessionalChatWidget = () => {
           <div className="bg-white p-3 rounded-t-[10px]">
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center space-x-2">
-                {(currentScreen === 'categories' || currentScreen === 'form') && <Button variant="ghost" size="sm" onClick={goBack} className="h-8 w-8 p-0 text-gray-600 hover:bg-gray-100">
+                {(currentScreen === 'categories' || currentScreen === 'form') && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={goBack}
+                    className="h-8 w-8 p-0 text-gray-600 hover:bg-gray-100"
+                  >
                     <ArrowLeft className="h-4 w-4" />
-                  </Button>}
+                  </Button>
+                )}
                 <LanguageSelector />
               </div>
               <div className="flex items-center space-x-1">
-                <Button variant="ghost" size="sm" onClick={emailTranscript} className="h-8 w-8 p-0 text-gray-600 hover:bg-gray-100">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={emailTranscript}
+                  className="h-8 w-8 p-0 text-gray-600 hover:bg-gray-100"
+                >
                   <MoreHorizontal className="h-4 w-4" />
                 </Button>
-                <Button variant="ghost" size="sm" onClick={minimizeChat} className="h-8 w-8 p-0 text-gray-600 hover:bg-gray-100">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={minimizeChat}
+                  className="h-8 w-8 p-0 text-gray-600 hover:bg-gray-100"
+                >
                   <Minus className="h-4 w-4" />
                 </Button>
-                
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setIsOpen(false)}
+                  className="h-8 w-8 p-0 text-gray-600 hover:bg-gray-100"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
               </div>
             </div>
             
@@ -294,5 +332,6 @@ export const ProfessionalChatWidget = () => {
           </div>
         </DialogContent>
       </Dialog>
-    </>;
+    </>
+  );
 };

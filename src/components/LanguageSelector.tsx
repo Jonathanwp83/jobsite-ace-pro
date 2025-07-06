@@ -15,7 +15,7 @@ export const LanguageSelector = () => {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="sm" className="gap-1 px-2">
+        <Button variant="ghost" size="sm" className="gap-1 px-2 border border-gray-300 rounded">
           <Globe className="h-4 w-4" />
           <ChevronDown className="h-3 w-3" />
         </Button>
@@ -25,15 +25,13 @@ export const LanguageSelector = () => {
           onClick={() => setLanguage('en')}
           className="cursor-pointer hover:bg-muted"
         >
-          <span className="text-xl mr-2">🇺🇸</span>
           English
         </DropdownMenuItem>
         <DropdownMenuItem 
           onClick={() => setLanguage('fr')}
           className="cursor-pointer hover:bg-muted"
         >
-          <span className="text-xl mr-2">🇫🇷</span>
-          Français
+          French
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
