@@ -20,40 +20,33 @@ export const ProfessionalChatWidget = () => {
     message: ''
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const {
-    toast
-  } = useToast();
+  const { toast } = useToast();
 
   const categories = [{
     value: 'sales',
     label: 'Sales',
     icon: ShoppingCart,
-    description: 'New business inquiries and partnerships',
-    color: 'bg-green-50 text-green-700 border-green-200'
+    description: 'New business inquiries and partnerships'
   }, {
     value: 'pre-sales',
     label: 'Pre-Sales',
     icon: Headphones,
-    description: 'Questions before making a purchase',
-    color: 'bg-blue-50 text-blue-700 border-blue-200'
+    description: 'Questions before making a purchase'
   }, {
     value: 'technical',
     label: 'Technical Support',
     icon: Wrench,
-    description: 'Help using ContractorPro features',
-    color: 'bg-purple-50 text-purple-700 border-purple-200'
+    description: 'Help using ContractorPro features'
   }, {
     value: 'billing',
     label: 'Billing Support',
     icon: CreditCard,
-    description: 'Subscription and payment questions',
-    color: 'bg-orange-50 text-orange-700 border-orange-200'
+    description: 'Subscription and payment questions'
   }, {
     value: 'live-agent',
     label: 'Live Agent',
     icon: User,
-    description: 'Connect with a human agent',
-    color: 'bg-red-50 text-red-700 border-red-200'
+    description: 'Connect with a human agent'
   }];
 
   const handleCategorySelect = (category: string) => {
@@ -73,9 +66,7 @@ export const ProfessionalChatWidget = () => {
     setIsSubmitting(true);
     try {
       const sessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-      const {
-        error
-      } = await supabase.from('chats').insert([{
+      const { error } = await supabase.from('chats').insert([{
         visitor_name: formData.name,
         visitor_email: formData.email,
         message: formData.message,
@@ -125,12 +116,45 @@ export const ProfessionalChatWidget = () => {
     setIsOpen(false);
   };
 
-  const emailTranscript = () => {
-    // Placeholder for email transcript functionality
-    toast({
-      title: "Feature Coming Soon",
-      description: "Email transcript feature will be available soon."
-    });
+  const emailTranscript = async () => {
+    if (!formData.email || !formData.name || !formData.message) {
+      toast({
+        title: "No Transcript Available",
+        description: "Please complete the chat form first to generate a transcript.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      const sessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      
+      const response = await supabase.functions.invoke('send-chat-transcript', {
+        body: {
+          email: formData.email,
+          name: formData.name,
+          category: selectedCategory || 'General',
+          message: formData.message,
+          sessionId: sessionId
+        }
+      });
+
+      if (response.error) {
+        throw response.error;
+      }
+
+      toast({
+        title: "Transcript Sent!",
+        description: `Chat transcript has been sent to ${formData.email}`
+      });
+    } catch (error) {
+      console.error('Error sending transcript:', error);
+      toast({
+        title: "Error",
+        description: "Failed to send transcript. Please try again.",
+        variant: "destructive"
+      });
+    }
   };
 
   return (
@@ -208,7 +232,8 @@ export const ProfessionalChatWidget = () => {
 
           {/* Content */}
           <div className="p-6 bg-white min-h-[300px] flex flex-col">
-            {currentScreen === 'welcome' && <div className="text-center space-y-6 flex-1 flex flex-col justify-center">
+            {currentScreen === 'welcome' && (
+              <div className="text-center space-y-6 flex-1 flex flex-col justify-center">
                 <div className="mx-auto w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center">
                   <Building2 className="h-8 w-8 text-blue-600" />
                 </div>
@@ -228,9 +253,11 @@ export const ProfessionalChatWidget = () => {
                 <div className="text-xs text-gray-500">
                   Typically replies within a few minutes
                 </div>
-              </div>}
+              </div>
+            )}
 
-            {currentScreen === 'categories' && <div className="space-y-4 flex-1">
+            {currentScreen === 'categories' && (
+              <div className="space-y-4 flex-1">
                 <div className="text-center mb-6">
                   <h3 className="text-lg font-semibold text-gray-900 mb-2">
                     How can we help you today?
@@ -242,12 +269,13 @@ export const ProfessionalChatWidget = () => {
                 
                 <div className="space-y-3 flex-1">
                   {categories.map(cat => {
-                const Icon = cat.icon;
-                return <Card key={cat.value} className={`cursor-pointer hover:shadow-md transition-all duration-200 border-2 hover:scale-[1.02] ${cat.color}`} onClick={() => handleCategorySelect(cat.value)}>
+                    const Icon = cat.icon;
+                    return (
+                      <Card key={cat.value} className="cursor-pointer hover:shadow-md transition-all duration-200 border-2 hover:scale-[1.02] bg-blue-50 text-blue-700 border-blue-200" onClick={() => handleCategorySelect(cat.value)}>
                         <CardContent className="p-4">
                           <div className="flex items-center space-x-3">
                             <div className="p-2 bg-white rounded-lg shadow-sm">
-                              <Icon className="h-5 w-5" />
+                              <Icon className="h-5 w-5 text-blue-600" />
                             </div>
                             <div className="flex-1">
                               <h4 className="font-semibold text-sm">{cat.label}</h4>
@@ -255,12 +283,15 @@ export const ProfessionalChatWidget = () => {
                             </div>
                           </div>
                         </CardContent>
-                      </Card>;
-              })}
+                      </Card>
+                    );
+                  })}
                 </div>
-              </div>}
+              </div>
+            )}
 
-            {currentScreen === 'form' && <div className="space-y-4 flex-1">
+            {currentScreen === 'form' && (
+              <div className="space-y-4 flex-1">
                 <div className="text-center mb-6">
                   <h3 className="text-lg font-semibold text-gray-900 mb-2">
                     {categories.find(c => c.value === selectedCategory)?.label} Support
@@ -273,34 +304,36 @@ export const ProfessionalChatWidget = () => {
                 <div>
                   <Label htmlFor="name" className="text-sm font-medium">Your Name</Label>
                   <Input id="name" value={formData.name} onChange={e => setFormData(prev => ({
-                ...prev,
-                name: e.target.value
-              }))} placeholder="Enter your full name" className="mt-1" />
+                    ...prev,
+                    name: e.target.value
+                  }))} placeholder="Enter your full name" className="mt-1" />
                 </div>
                 
                 <div>
                   <Label htmlFor="email" className="text-sm font-medium">Email Address</Label>
                   <Input id="email" type="email" value={formData.email} onChange={e => setFormData(prev => ({
-                ...prev,
-                email: e.target.value
-              }))} placeholder="your@email.com" className="mt-1" />
+                    ...prev,
+                    email: e.target.value
+                  }))} placeholder="your@email.com" className="mt-1" />
                 </div>
                 
                 <div>
                   <Label htmlFor="message" className="text-sm font-medium">Your Message</Label>
                   <Textarea id="message" value={formData.message} onChange={e => setFormData(prev => ({
-                ...prev,
-                message: e.target.value
-              }))} placeholder="Describe your question or issue in detail..." rows={4} className="mt-1" />
+                    ...prev,
+                    message: e.target.value
+                  }))} placeholder="Describe your question or issue in detail..." rows={4} className="mt-1" />
                 </div>
 
                 <Button onClick={handleSubmit} disabled={isSubmitting} className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 mt-4" size="lg">
                   <Send className="mr-2 h-4 w-4" />
                   {isSubmitting ? 'Sending...' : 'Send Message'}
                 </Button>
-              </div>}
+              </div>
+            )}
 
-            {currentScreen === 'sent' && <div className="text-center space-y-6 flex-1 flex flex-col justify-center">
+            {currentScreen === 'sent' && (
+              <div className="text-center space-y-6 flex-1 flex flex-col justify-center">
                 <div className="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
                   <Send className="h-8 w-8 text-green-600" />
                 </div>
@@ -321,7 +354,8 @@ export const ProfessionalChatWidget = () => {
                 <Button onClick={resetChat} variant="outline" className="w-full">
                   Send Another Message
                 </Button>
-              </div>}
+              </div>
+            )}
           </div>
 
           {/* Footer */}
