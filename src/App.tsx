@@ -34,6 +34,11 @@ function App() {
                 <Route path="/auth" element={<Auth />} />
                 <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/admin" element={<AdminDashboard />} />
+                <Route path="/admin/contractors" element={<AdminDashboard />} />
+                <Route path="/admin/analytics" element={<AdminDashboard />} />
+                <Route path="/admin/chats" element={<AdminDashboard />} />
+                <Route path="/admin/invoices" element={<AdminDashboard />} />
+                <Route path="/admin/settings" element={<AdminDashboard />} />
                 <Route path="/jobs" element={<Jobs />} />
                 <Route path="/customers" element={<Customers />} />
                 <Route path="/staff" element={<Staff />} />
