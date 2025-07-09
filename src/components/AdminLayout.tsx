@@ -40,7 +40,7 @@ export const AdminLayout = ({ children }: AdminLayoutProps) => {
   };
 
   return (
-    <div className="flex h-screen bg-gray-50">
+    <div className="flex h-screen bg-background">
       {/* Mobile menu button */}
       <div className="lg:hidden fixed top-4 left-4 z-50">
         <Button
@@ -54,16 +54,16 @@ export const AdminLayout = ({ children }: AdminLayoutProps) => {
 
       {/* Admin Sidebar */}
       <div className={`
-        fixed inset-y-0 left-0 z-40 w-64 bg-slate-900 shadow-lg transform transition-transform duration-300 ease-in-out
+        fixed inset-y-0 left-0 z-40 w-64 bg-card border-r shadow-lg transform transition-transform duration-300 ease-in-out
         lg:translate-x-0 lg:static lg:inset-0
         ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
       `}>
         <div className="flex flex-col h-full">
           {/* Admin Header */}
-          <div className="flex items-center justify-between h-16 px-4 border-b border-slate-700">
+          <div className="flex items-center justify-between h-16 px-4 border-b">
             <div className="flex items-center">
-              <h1 className="text-xl font-bold text-white">Admin Portal</h1>
-              <Badge className="ml-3 bg-red-600 text-white">Platform Admin</Badge>
+              <h1 className="text-xl font-bold text-primary">ContractorPro</h1>
+              <Badge className="ml-3 bg-primary text-primary-foreground">Admin</Badge>
             </div>
           </div>
 
@@ -81,8 +81,8 @@ export const AdminLayout = ({ children }: AdminLayoutProps) => {
                   className={`
                     flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors
                     ${isActive 
-                      ? 'bg-slate-700 text-white' 
-                      : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+                      ? 'bg-primary text-primary-foreground' 
+                      : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
                     }
                   `}
                 >
@@ -94,10 +94,10 @@ export const AdminLayout = ({ children }: AdminLayoutProps) => {
           </nav>
 
           {/* Admin Sign out */}
-          <div className="p-4 border-t border-slate-700">
+          <div className="p-4 border-t">
             <Button
               variant="outline"
-              className="w-full text-slate-300 border-slate-600 hover:bg-slate-800 hover:text-white"
+              className="w-full"
               onClick={handleSignOut}
             >
               <LogOut className="mr-2 h-4 w-4" />

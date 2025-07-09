@@ -22,8 +22,10 @@ const Auth = () => {
   const { signIn, signUp, user } = useAuth();
   const navigate = useNavigate();
 
-  // Redirect if already logged in
-  if (user) {
+  // Only redirect if user is logged in AND they're not explicitly on the auth page
+  // This prevents auto-redirect and allows users to see the login form when they want to
+  const currentPath = window.location.pathname;
+  if (user && currentPath !== '/auth') {
     navigate('/dashboard');
     return null;
   }
@@ -35,6 +37,7 @@ const Auth = () => {
     if (isLogin) {
       const { error } = await signIn(email, password);
       if (!error) {
+        // Let the dashboard routing logic handle where to redirect based on role
         navigate('/dashboard');
       }
     } else {

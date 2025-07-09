@@ -27,7 +27,7 @@ interface ContractorProfile {
 
 const Dashboard = () => {
   const { user } = useAuth();
-  const { userRole, isAdmin } = useRole();
+  const { userRole, isAdmin, loading: roleLoading } = useRole();
   const navigate = useNavigate();
   const [profile, setProfile] = useState<ContractorProfile | null>(null);
   const [loading, setLoading] = useState(true);
@@ -47,8 +47,14 @@ const Dashboard = () => {
       return;
     }
     
-    // Redirect admins to admin dashboard immediately
-    if (isAdmin) {
+    // Wait for role loading to complete before making routing decisions
+    if (roleLoading) {
+      console.log('⏳ Role still loading, waiting...');
+      return;
+    }
+    
+    // Redirect admins to admin dashboard, but only if role detection is complete
+    if (isAdmin && userRole === 'admin') {
       console.log('✅ User is admin, redirecting to admin dashboard');
       navigate('/admin');
       return;
@@ -66,7 +72,7 @@ const Dashboard = () => {
       fetchProfile();
       fetchStats();
     }
-  }, [user, isAdmin, userRole, navigate]);
+  }, [user, isAdmin, userRole, roleLoading, navigate]);
 
   const fetchProfile = async () => {
     try {
