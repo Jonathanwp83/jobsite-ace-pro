@@ -130,7 +130,7 @@ export const InvoiceManagement = ({ onRefresh }: InvoiceManagementProps) => {
     }).format(amount);
   };
 
-  const filteredInvoices = selectedContractor 
+  const filteredInvoices = selectedContractor && selectedContractor !== 'all'
     ? invoices.filter(invoice => invoice.contractor_id === selectedContractor)
     : invoices;
 
@@ -206,7 +206,7 @@ export const InvoiceManagement = ({ onRefresh }: InvoiceManagementProps) => {
                   <SelectValue placeholder="All Contractors" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Contractors</SelectItem>
+                  <SelectItem value="all">All Contractors</SelectItem>
                   {contractors.map((contractor) => (
                     <SelectItem key={contractor.id} value={contractor.id}>
                       {contractor.company_name}
