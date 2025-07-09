@@ -66,9 +66,9 @@ export const ChatManagement = ({ chats, onRefresh }: ChatManagementProps) => {
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'pending':
-        return <Clock className="h-4 w-4 text-orange-500" />;
+        return <Clock className="h-4 w-4 text-primary" />;
       case 'responded':
-        return <CheckCircle className="h-4 w-4 text-green-500" />;
+        return <CheckCircle className="h-4 w-4 text-primary" />;
       default:
         return <AlertCircle className="h-4 w-4 text-gray-500" />;
     }
@@ -77,9 +77,9 @@ export const ChatManagement = ({ chats, onRefresh }: ChatManagementProps) => {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'pending':
-        return 'bg-orange-100 text-orange-800';
+        return 'bg-primary/10 text-primary';
       case 'responded':
-        return 'bg-green-100 text-green-800';
+        return 'bg-primary/20 text-primary';
       default:
         return 'bg-gray-100 text-gray-800';
     }
@@ -91,7 +91,7 @@ export const ChatManagement = ({ chats, onRefresh }: ChatManagementProps) => {
     if (priority >= 3) {
       return <Badge variant="destructive" className="text-xs">High Priority</Badge>;
     } else if (priority === 2) {
-      return <Badge variant="secondary" className="text-xs bg-yellow-100 text-yellow-800">Medium Priority</Badge>;
+      return <Badge variant="secondary" className="text-xs bg-primary/10 text-primary">Medium Priority</Badge>;
     }
     return <Badge variant="outline" className="text-xs">Low Priority</Badge>;
   };
@@ -116,12 +116,12 @@ export const ChatManagement = ({ chats, onRefresh }: ChatManagementProps) => {
           {/* Pending Chats Section */}
           <div>
             <h3 className="text-lg font-semibold mb-3 flex items-center">
-              <AlertCircle className="mr-2 h-5 w-5 text-orange-500" />
+              <AlertCircle className="mr-2 h-5 w-5 text-primary" />
               Pending Chats ({pendingChats.length})
             </h3>
             <div className="space-y-3">
               {pendingChats.map((chat) => (
-                <div key={chat.id} className="p-4 border rounded-lg border-orange-200 bg-orange-50">
+                <div key={chat.id} className="p-4 border rounded-lg border-primary/20 bg-primary/5">
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       <div className="flex items-center space-x-2 mb-2">
@@ -158,7 +158,7 @@ export const ChatManagement = ({ chats, onRefresh }: ChatManagementProps) => {
                         <Button
                           size="sm"
                           onClick={() => setSelectedChat(chat)}
-                          className="bg-orange-600 hover:bg-orange-700"
+                          className="bg-primary hover:bg-primary/90"
                         >
                           <Send className="mr-2 h-4 w-4" />
                           Respond
@@ -210,7 +210,7 @@ export const ChatManagement = ({ chats, onRefresh }: ChatManagementProps) => {
           {/* Responded Chats Section */}
           <div>
             <h3 className="text-lg font-semibold mb-3 flex items-center">
-              <CheckCircle className="mr-2 h-5 w-5 text-green-500" />
+              <CheckCircle className="mr-2 h-5 w-5 text-primary" />
               Recent Responses ({respondedChats.length})
             </h3>
             <div className="space-y-3">

@@ -56,7 +56,7 @@ export default function AdminSettings() {
             <CardContent className="space-y-4">
               <div className="flex items-center justify-between">
                 <span className="text-sm">Database Status</span>
-                <Badge variant="default" className="bg-green-100 text-green-800">Connected</Badge>
+                <Badge variant="default" className="bg-primary/20 text-primary">Connected</Badge>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-sm">Backup Schedule</span>
@@ -78,7 +78,7 @@ export default function AdminSettings() {
             <CardContent className="space-y-4">
               <div className="flex items-center justify-between">
                 <span className="text-sm">Two-Factor Auth</span>
-                <Badge variant="default" className="bg-green-100 text-green-800">Enabled</Badge>
+                <Badge variant="default" className="bg-primary/20 text-primary">Enabled</Badge>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-sm">Session Timeout</span>
@@ -100,7 +100,7 @@ export default function AdminSettings() {
             <CardContent className="space-y-4">
               <div className="flex items-center justify-between">
                 <span className="text-sm">Email Notifications</span>
-                <Badge variant="default" className="bg-green-100 text-green-800">Enabled</Badge>
+                <Badge variant="default" className="bg-primary/20 text-primary">Enabled</Badge>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-sm">SMS Alerts</span>

@@ -107,11 +107,11 @@ export const InvoiceManagement = ({ onRefresh }: InvoiceManagementProps) => {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'paid':
-        return 'bg-green-100 text-green-800';
+        return 'bg-primary/20 text-primary';
       case 'sent':
         return 'bg-blue-100 text-blue-800';
       case 'overdue':
-        return 'bg-red-100 text-red-800';
+        return 'bg-primary/10 text-primary';
       case 'draft':
         return 'bg-gray-100 text-gray-800';
       default:
@@ -168,12 +168,12 @@ export const InvoiceManagement = ({ onRefresh }: InvoiceManagementProps) => {
         <div className="space-y-6">
           {/* Revenue Summary */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="bg-green-50 p-4 rounded-lg">
+            <div className="bg-primary/10 p-4 rounded-lg">
               <div className="flex items-center">
-                <DollarSign className="h-8 w-8 text-green-600" />
+                <DollarSign className="h-8 w-8 text-primary" />
                 <div className="ml-3">
-                  <p className="text-sm font-medium text-green-600">Paid Revenue</p>
-                  <p className="text-2xl font-bold text-green-700">{formatCurrency(totalRevenue)}</p>
+                  <p className="text-sm font-medium text-primary">Paid Revenue</p>
+                  <p className="text-2xl font-bold text-primary">{formatCurrency(totalRevenue)}</p>
                 </div>
               </div>
             </div>
@@ -186,12 +186,12 @@ export const InvoiceManagement = ({ onRefresh }: InvoiceManagementProps) => {
                 </div>
               </div>
             </div>
-            <div className="bg-red-50 p-4 rounded-lg">
+            <div className="bg-primary/5 p-4 rounded-lg">
               <div className="flex items-center">
-                <Receipt className="h-8 w-8 text-red-600" />
+                <Receipt className="h-8 w-8 text-primary" />
                 <div className="ml-3">
-                  <p className="text-sm font-medium text-red-600">Overdue Revenue</p>
-                  <p className="text-2xl font-bold text-red-700">{formatCurrency(overdueRevenue)}</p>
+                  <p className="text-sm font-medium text-primary">Overdue Revenue</p>
+                  <p className="text-2xl font-bold text-primary">{formatCurrency(overdueRevenue)}</p>
                 </div>
               </div>
             </div>
@@ -231,7 +231,7 @@ export const InvoiceManagement = ({ onRefresh }: InvoiceManagementProps) => {
                       <Badge className={getStatusColor(invoice.status)}>
                         {invoice.status}
                       </Badge>
-                      <span className="text-lg font-bold text-green-600">
+                      <span className="text-lg font-bold text-primary">
                         {formatCurrency(invoice.total)}
                       </span>
                     </div>
