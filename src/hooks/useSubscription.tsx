@@ -41,24 +41,45 @@ export const SubscriptionProvider = ({ children }: { children: ReactNode }) => {
 
     setLoading(true);
     try {
+      // First check if this user is an admin - admins don't need subscriptions
+      const { data: roleData } = await supabase.rpc('get_user_role', {
+        _user_id: user.id
+      });
+      
+      if (roleData === 'admin') {
+        console.log('👤 User is admin, skipping subscription check');
+        setSubscribed(true);
+        setSubscriptionTier('Admin');
+        setSubscriptionEnd(null);
+        return;
+      }
+
+      console.log('🔍 Checking subscription for user:', user.email);
       const { data, error } = await supabase.functions.invoke('check-subscription', {
         headers: {
           Authorization: `Bearer ${session.access_token}`,
         },
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Subscription check error:', error);
+        // For non-admin users, default to unsubscribed state if check fails
+        setSubscribed(false);
+        setSubscriptionTier(null);
+        setSubscriptionEnd(null);
+        return;
+      }
 
       setSubscribed(data.subscribed);
       setSubscriptionTier(data.subscription_tier);
       setSubscriptionEnd(data.subscription_end);
+      console.log('✅ Subscription check complete:', data);
     } catch (error) {
       console.error('Error checking subscription:', error);
-      toast({
-        variant: "destructive",
-        title: "Subscription Check Failed",
-        description: "Unable to verify subscription status",
-      });
+      // Silently fail for better UX - default to unsubscribed
+      setSubscribed(false);
+      setSubscriptionTier(null);
+      setSubscriptionEnd(null);
     } finally {
       setLoading(false);
     }
@@ -113,10 +134,14 @@ export const SubscriptionProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  // Check subscription on user change
+  // Check subscription on user change, but delay slightly to let role detection complete
   useEffect(() => {
     if (user) {
-      checkSubscription();
+      // Small delay to ensure role detection is complete
+      const timer = setTimeout(() => {
+        checkSubscription();
+      }, 1000);
+      return () => clearTimeout(timer);
     }
   }, [user]);
 
