@@ -19,10 +19,10 @@ const Auth = () => {
   const [contactName, setContactName] = useState('');
   const [loading, setLoading] = useState(false);
   const [showTestHelper, setShowTestHelper] = useState(false);
-  const { signIn, signUp, user } = useAuth();
+  const { signIn, signUp, signOut, user } = useAuth();
   const navigate = useNavigate();
 
-  // Don't auto-redirect when on auth page - let user see login form
+  // If user is already logged in, show a way back to dashboard
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -60,10 +60,30 @@ const Auth = () => {
             ContractorPro
           </CardTitle>
           <CardDescription>
-            {isLogin ? 'Sign in to your account' : 'Create your account'}
+            {user ? 'You are already logged in' : isLogin ? 'Sign in to your account' : 'Create your account'}
           </CardDescription>
         </CardHeader>
         <CardContent>
+          {user ? (
+            <div className="text-center space-y-4">
+              <p className="text-sm text-gray-600">
+                Welcome back! You are currently logged in.
+              </p>
+              <Button onClick={() => navigate('/dashboard')} className="w-full">
+                Go to Dashboard
+              </Button>
+              <Button 
+                variant="outline" 
+                onClick={() => {
+                  signOut();
+                  window.location.reload();
+                }} 
+                className="w-full"
+              >
+                Sign Out
+              </Button>
+            </div>
+          ) : (
           <div className="space-y-4">
             <div className="flex justify-center mb-4">
               <Button
@@ -180,7 +200,8 @@ const Auth = () => {
                 </Button>
               </form>
             </div>
-          </div>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>
