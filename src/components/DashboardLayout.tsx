@@ -32,8 +32,22 @@ interface DashboardLayoutProps {
 }
 
 const getNavigationItems = (userRole: string | null) => {
-  const baseItems = [
-    { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard, roles: ['admin', 'contractor', 'staff'] },
+  // Admin gets completely different navigation
+  if (userRole === 'admin') {
+    return [
+      { name: 'Admin Dashboard', href: '/admin', icon: LayoutDashboard, roles: ['admin'] },
+      { name: 'Contractors', href: '/admin/contractors', icon: Users, roles: ['admin'] },
+      { name: 'Platform Analytics', href: '/admin/analytics', icon: BarChart3, roles: ['admin'] },
+      { name: 'Chat Management', href: '/admin/chats', icon: Shield, roles: ['admin'] },
+      { name: 'Invoice Management', href: '/admin/invoices', icon: Receipt, roles: ['admin'] },
+      { name: 'User Management', href: '/admin/users', icon: Users, roles: ['admin'] },
+      { name: 'System Settings', href: '/admin/settings', icon: Settings, roles: ['admin'] },
+    ];
+  }
+
+  // Contractor and staff navigation
+  const contractorItems = [
+    { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard, roles: ['contractor', 'staff'] },
     { name: 'Jobs', href: '/jobs', icon: Briefcase, roles: ['contractor', 'staff'] },
     { name: 'Customers', href: '/customers', icon: Users, roles: ['contractor'] },
     { name: 'Staff', href: '/staff', icon: Users, roles: ['contractor'] },
@@ -44,10 +58,9 @@ const getNavigationItems = (userRole: string | null) => {
     { name: 'Files', href: '/files', icon: Upload, roles: ['contractor', 'staff'] },
     { name: 'Analytics', href: '/analytics', icon: BarChart3, roles: ['contractor'] },
     { name: 'Settings', href: '/settings', icon: Settings, roles: ['contractor'] },
-    { name: 'Admin Panel', href: '/admin', icon: Shield, roles: ['admin'] },
   ];
 
-  return baseItems.filter(item => item.roles.includes(userRole || ''));
+  return contractorItems.filter(item => item.roles.includes(userRole || ''));
 };
 
 export const DashboardLayout = ({ children, profile }: DashboardLayoutProps) => {

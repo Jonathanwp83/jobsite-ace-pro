@@ -3,12 +3,14 @@ import { useAuth } from '@/hooks/useAuth';
 import { useRole } from '@/hooks/useRole';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import { DashboardLayout } from '@/components/DashboardLayout';
 import { AdminStats } from '@/components/admin/AdminStats';
 import { ContractorManagement } from '@/components/admin/ContractorManagement';
 import { ChatManagement } from '@/components/admin/ChatManagement';
 import { InvoiceManagement } from '@/components/admin/InvoiceManagement';
 import { useToast } from '@/hooks/use-toast';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { LogOut } from 'lucide-react';
 
 interface Contractor {
   id: string;
@@ -36,7 +38,7 @@ interface Chat {
 }
 
 export default function AdminDashboard() {
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
   const { isAdmin, loading: roleLoading } = useRole();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -114,13 +116,19 @@ export default function AdminDashboard() {
   };
 
 
+  const handleSignOut = async () => {
+    await signOut();
+    navigate('/');
+  };
+
   if (roleLoading || loading) {
     return (
-      <DashboardLayout profile={{ contact_name: 'Admin', subscription_plan: 'admin' }}>
-        <div className="flex items-center justify-center h-64">
-          <div className="text-lg">Loading admin dashboard...</div>
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading admin dashboard...</p>
         </div>
-      </DashboardLayout>
+      </div>
     );
   }
 
@@ -129,22 +137,44 @@ export default function AdminDashboard() {
   }
 
   return (
-    <DashboardLayout profile={{ contact_name: 'Admin', subscription_plan: 'admin' }}>
-      <div className="space-y-6">
-        <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
-
-        {/* Enhanced Stats Cards */}
-        <AdminStats stats={stats} />
-
-        {/* Contractor Management */}
-        <ContractorManagement contractors={contractors} onRefresh={fetchAdminData} />
-
-        {/* Chat Management */}
-        <ChatManagement chats={chats} onRefresh={fetchAdminData} />
-
-        {/* Invoice Management */}
-        <InvoiceManagement />
+    <div className="min-h-screen bg-gray-100">
+      {/* Admin Header */}
+      <div className="bg-white shadow-sm border-b">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center py-4">
+            <div className="flex items-center">
+              <h1 className="text-2xl font-bold text-gray-900">ContractorPro Admin</h1>
+              <Badge className="ml-3 bg-red-100 text-red-800">Platform Admin</Badge>
+            </div>
+            <Button variant="outline" onClick={handleSignOut}>
+              <LogOut className="mr-2 h-4 w-4" />
+              Sign out
+            </Button>
+          </div>
+        </div>
       </div>
-    </DashboardLayout>
+
+      {/* Admin Content */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="space-y-6">
+          <div>
+            <h2 className="text-3xl font-bold text-gray-900">Platform Overview</h2>
+            <p className="text-gray-600 mt-2">Manage contractors, subscriptions, and platform operations</p>
+          </div>
+
+          {/* Enhanced Stats Cards */}
+          <AdminStats stats={stats} />
+
+          {/* Contractor Management */}
+          <ContractorManagement contractors={contractors} onRefresh={fetchAdminData} />
+
+          {/* Chat Management */}
+          <ChatManagement chats={chats} onRefresh={fetchAdminData} />
+
+          {/* Invoice Management */}
+          <InvoiceManagement />
+        </div>
+      </div>
+    </div>
   );
 }

@@ -43,13 +43,21 @@ const Dashboard = () => {
       navigate('/auth');
       return;
     }
+    // Redirect admins to admin dashboard immediately
     if (isAdmin) {
       navigate('/admin');
       return;
     }
-    fetchProfile();
-    fetchStats();
-  }, [user, isAdmin, navigate]);
+    // Only contractors and staff should access this dashboard
+    if (userRole && userRole !== 'contractor' && userRole !== 'staff') {
+      navigate('/admin');
+      return;
+    }
+    if (userRole === 'contractor' || userRole === 'staff') {
+      fetchProfile();
+      fetchStats();
+    }
+  }, [user, isAdmin, userRole, navigate]);
 
   const fetchProfile = async () => {
     try {
