@@ -22,13 +22,7 @@ const Auth = () => {
   const { signIn, signUp, user } = useAuth();
   const navigate = useNavigate();
 
-  // Only redirect if user is logged in AND they're not explicitly on the auth page
-  // This prevents auto-redirect and allows users to see the login form when they want to
-  const currentPath = window.location.pathname;
-  if (user && currentPath !== '/auth') {
-    navigate('/dashboard');
-    return null;
-  }
+  // Don't auto-redirect when on auth page - let user see login form
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
