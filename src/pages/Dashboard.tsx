@@ -39,21 +39,30 @@ const Dashboard = () => {
   });
 
   useEffect(() => {
+    console.log('🔍 Dashboard useEffect:', { user: user?.email, isAdmin, userRole });
+    
     if (!user) {
+      console.log('❌ No user, redirecting to auth');
       navigate('/auth');
       return;
     }
+    
     // Redirect admins to admin dashboard immediately
     if (isAdmin) {
+      console.log('✅ User is admin, redirecting to admin dashboard');
       navigate('/admin');
       return;
     }
+    
     // Only contractors and staff should access this dashboard
     if (userRole && userRole !== 'contractor' && userRole !== 'staff') {
+      console.log('❌ User role not contractor/staff, redirecting to admin');
       navigate('/admin');
       return;
     }
+    
     if (userRole === 'contractor' || userRole === 'staff') {
+      console.log('✅ User is contractor/staff, fetching data');
       fetchProfile();
       fetchStats();
     }

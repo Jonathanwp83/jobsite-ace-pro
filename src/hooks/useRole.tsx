@@ -30,10 +30,13 @@ export const RoleProvider = ({ children }: { children: ReactNode }) => {
 
   const fetchUserRole = async () => {
     if (!user) {
+      console.log('🔍 No user found, setting role to null');
       setUserRole(null);
       setLoading(false);
       return;
     }
+
+    console.log('🔍 Fetching role for user:', user.email, user.id);
 
     try {
       // Use the improved get_user_role function that checks both admin flags and user_roles
@@ -41,25 +44,32 @@ export const RoleProvider = ({ children }: { children: ReactNode }) => {
         _user_id: user.id
       });
 
+      console.log('🔍 RPC get_user_role result:', { data, error });
+
       if (error) {
-        console.error('Error fetching user role:', error);
+        console.error('❌ Error fetching user role:', error);
         // Fallback: check if user is platform admin in contractors table
         const { data: contractorData } = await supabase
           .from('contractors')
-          .select('is_platform_admin')
+          .select('is_platform_admin, email')
           .eq('user_id', user.id)
           .single();
         
+        console.log('🔍 Fallback contractor data:', contractorData);
+        
         if (contractorData?.is_platform_admin) {
+          console.log('✅ User detected as admin via fallback');
           setUserRole('admin');
         } else {
+          console.log('✅ User detected as contractor via fallback');
           setUserRole('contractor');
         }
       } else {
+        console.log('✅ User role detected via RPC:', data);
         setUserRole(data as UserRole);
       }
     } catch (error) {
-      console.error('Error fetching user role:', error);
+      console.error('❌ Error fetching user role:', error);
       setUserRole('contractor');
     } finally {
       setLoading(false);
