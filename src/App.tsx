@@ -18,6 +18,11 @@ import Invoices from '@/pages/Invoices';
 import Files from '@/pages/Files';
 import Analytics from '@/pages/Analytics';
 import AdminDashboard from '@/pages/AdminDashboard';
+import AdminContractors from '@/pages/admin/AdminContractors';
+import AdminAnalytics from '@/pages/admin/AdminAnalytics';
+import AdminChats from '@/pages/admin/AdminChats';
+import AdminInvoices from '@/pages/admin/AdminInvoices';
+import AdminSettings from '@/pages/admin/AdminSettings';
 import ContractorSettings from '@/pages/ContractorSettings';
 import NotFound from '@/pages/NotFound';
 
@@ -34,11 +39,11 @@ function App() {
                 <Route path="/auth" element={<Auth />} />
                 <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/admin" element={<AdminDashboard />} />
-                <Route path="/admin/contractors" element={<AdminDashboard />} />
-                <Route path="/admin/analytics" element={<AdminDashboard />} />
-                <Route path="/admin/chats" element={<AdminDashboard />} />
-                <Route path="/admin/invoices" element={<AdminDashboard />} />
-                <Route path="/admin/settings" element={<AdminDashboard />} />
+                <Route path="/admin/contractors" element={<AdminContractors />} />
+                <Route path="/admin/analytics" element={<AdminAnalytics />} />
+                <Route path="/admin/chats" element={<AdminChats />} />
+                <Route path="/admin/invoices" element={<AdminInvoices />} />
+                <Route path="/admin/settings" element={<AdminSettings />} />
                 <Route path="/jobs" element={<Jobs />} />
                 <Route path="/customers" element={<Customers />} />
                 <Route path="/staff" element={<Staff />} />
