@@ -40,29 +40,37 @@ export const RoleProvider = ({ children }: { children: ReactNode }) => {
     console.log('🔍 Fetching role for user:', user.email, user.id);
 
     try {
-      // First check if user is a Contractor Pro platform admin
-      const { data: contractorData } = await supabase
-        .from('contractors')
-        .select('is_platform_admin, id')
+      // PHASE 1: Check if user is Platform Admin (Contractor Pro employee)
+      const { data: adminRoleData } = await supabase
+        .from('user_roles')
+        .select('role')
         .eq('user_id', user.id)
+        .eq('role', 'admin')
         .single();
 
-      if (contractorData?.is_platform_admin) {
-        console.log('✅ User is Contractor Pro platform admin');
+      if (adminRoleData) {
+        console.log('✅ User is Platform Admin (Contractor Pro employee)');
         setUserRole('admin');
         setLoading(false);
         return;
       }
 
-      // If they have a contractor record, they're a contractor (your customer)
+      // PHASE 2: Check if user is a Contractor Customer (paying customer)
+      const { data: contractorData } = await supabase
+        .from('contractors')
+        .select('id, is_platform_admin')
+        .eq('user_id', user.id)
+        .eq('is_platform_admin', false)
+        .single();
+
       if (contractorData?.id) {
-        console.log('✅ User is a contractor customer');
+        console.log('✅ User is a Contractor Customer (paying customer)');
         setUserRole('contractor');
         setLoading(false);
         return;
       }
 
-      // Check if they're staff of a contractor
+      // PHASE 3: Check if user is Staff Member (contractor employee)
       const { data: staffData } = await supabase
         .from('staff')
         .select('id, contractor_id')
@@ -71,14 +79,14 @@ export const RoleProvider = ({ children }: { children: ReactNode }) => {
         .single();
 
       if (staffData?.id) {
-        console.log('✅ User is staff member');
+        console.log('✅ User is Staff Member (contractor employee)');
         setUserRole('staff');
         setLoading(false);
         return;
       }
 
-      // If no records found, they might be a new user
-      console.log('⚠️ User has no contractor or staff record');
+      // If no role found
+      console.log('⚠️ User has no assigned role');
       setUserRole(null);
     } catch (error) {
       console.error('❌ Error fetching user role:', error);

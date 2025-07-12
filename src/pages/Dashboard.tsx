@@ -51,19 +51,19 @@ const Dashboard = () => {
       return;
     }
     
-    // Redirect admins to admin dashboard
+    // Redirect Platform Admins to admin dashboard
     if (isAdmin && userRole === 'admin') {
-      console.log('✅ User is platform admin, redirecting to admin dashboard');
+      console.log('✅ User is Platform Admin, redirecting to admin dashboard');
       navigate('/admin');
       return;
     }
     
-    // Handle contractors and staff
+    // Handle Contractor Customers and Staff Members
     if (userRole === 'contractor') {
-      console.log('✅ User is contractor customer, fetching data');
+      console.log('✅ User is Contractor Customer, fetching business data');
       fetchContractorProfile();
     } else if (userRole === 'staff') {
-      console.log('✅ User is staff member, fetching contractor data');
+      console.log('✅ User is Staff Member, fetching contractor business data');
       fetchStaffContractorProfile();
     } else if (userRole === null) {
       console.log('⚠️ User has no role assigned');
@@ -77,6 +77,7 @@ const Dashboard = () => {
         .from('contractors')
         .select('*')
         .eq('user_id', user?.id)
+        .eq('is_platform_admin', false)
         .single();
 
       if (error) throw error;
@@ -191,6 +192,17 @@ const Dashboard = () => {
               Your account doesn't have the necessary permissions. Please contact your administrator.
             </CardDescription>
           </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <p className="text-sm text-gray-600">
+                If you're a contractor customer, please ensure your subscription is active.
+                If you're a staff member, please contact your contractor to ensure your account is properly set up.
+              </p>
+              <Button onClick={() => navigate('/auth')} className="w-full">
+                Back to Login
+              </Button>
+            </div>
+          </CardContent>
         </Card>
       </div>
     );
@@ -264,7 +276,7 @@ const Dashboard = () => {
         </Card>
       </div>
 
-      {/* Getting Started Section - Only for contractors */}
+      {/* Getting Started Section - Only for contractor customers */}
       {userRole === 'contractor' && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <Card>

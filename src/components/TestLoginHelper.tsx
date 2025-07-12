@@ -14,44 +14,48 @@ export const TestLoginHelper = () => {
 
   const testAccounts = [
     {
-      id: 'admin',
+      id: 'platform-admin',
       email: 'admin@contractorpro.com',
       password: 'testpass123',
       type: 'Platform Admin',
-      description: 'Contractor Pro platform administrator - manages the SaaS platform',
-      role: 'admin'
+      description: 'Contractor Pro employee - manages the SaaS platform and customers',
+      role: 'admin',
+      badge: 'Platform'
     },
     {
-      id: 'contractor1',
+      id: 'contractor-customer-1',
       email: 'john@acmeconstruction.com',
       password: 'testpass123',
       type: 'Contractor Customer',
-      description: 'Paying customer - runs Acme Construction Company',
+      description: 'Paying customer - owns Acme Construction Company',
       role: 'contractor',
+      badge: 'Customer',
       companyData: {
         company_name: 'Acme Construction Co.',
         contact_name: 'John Smith'
       }
     },
     {
-      id: 'contractor2',
+      id: 'contractor-customer-2',
       email: 'sarah@elitehomes.com',
       password: 'testpass123',
       type: 'Contractor Customer',
-      description: 'Paying customer - runs Elite Homes Builder',
+      description: 'Paying customer - owns Elite Homes Builder',
       role: 'contractor',
+      badge: 'Customer',
       companyData: {
         company_name: 'Elite Homes Builder',
         contact_name: 'Sarah Johnson'
       }
     },
     {
-      id: 'staff',
+      id: 'staff-member',
       email: 'mike@acmeconstruction.com',
       password: 'testpass123',
       type: 'Staff Member',
       description: 'Employee of Acme Construction (works for John Smith)',
-      role: 'staff'
+      role: 'staff',
+      badge: 'Staff'
     }
   ];
 
@@ -59,9 +63,9 @@ export const TestLoginHelper = () => {
     setLoading(account.id);
     
     try {
-      console.log('Creating test account:', account.email, account.type);
+      console.log('Creating clean test account:', account.email, account.type);
       
-      // Try to sign up first
+      // Try to sign up first (will handle existing users gracefully)
       const { error: signupError } = await supabase.auth.signUp({
         email: account.email,
         password: account.password,
@@ -74,7 +78,7 @@ export const TestLoginHelper = () => {
         throw signupError;
       }
 
-      // Sign in
+      // Sign in to get the user
       const { error: signinError } = await signIn(account.email, account.password);
       if (signinError) {
         throw signinError;
@@ -84,31 +88,32 @@ export const TestLoginHelper = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Failed to get user after login');
 
-      // Set up the user profile based on their role
+      // Set up user profile based on their role
       if (account.role === 'admin') {
-        // Create/update contractor record with admin flag
-        await supabase.from('contractors').upsert({
+        // Platform Admin: Create user_roles entry
+        await supabase.from('user_roles').upsert({
           user_id: user.id,
-          email: account.email,
-          company_name: 'Contractor Pro',
-          contact_name: 'Platform Admin',
-          subscription_plan: 'enterprise',
-          is_platform_admin: true
-        }, { onConflict: 'user_id' });
+          role: 'admin'
+        }, { onConflict: 'user_id,role' });
+
+        console.log('✅ Platform Admin role created');
 
       } else if (account.role === 'contractor' && account.companyData) {
-        // Create contractor customer record
+        // Contractor Customer: Create contractors record
         await supabase.from('contractors').upsert({
           user_id: user.id,
           email: account.email,
           company_name: account.companyData.company_name,
           contact_name: account.companyData.contact_name,
           subscription_plan: 'professional',
+          subscription_active: true,
           is_platform_admin: false
         }, { onConflict: 'user_id' });
 
+        console.log('✅ Contractor Customer record created');
+
       } else if (account.role === 'staff') {
-        // Find the contractor they work for (Acme Construction)
+        // Staff Member: Find the contractor they work for and create staff record
         const { data: contractor } = await supabase
           .from('contractors')
           .select('id')
@@ -116,7 +121,6 @@ export const TestLoginHelper = () => {
           .single();
 
         if (contractor) {
-          // Create staff record
           await supabase.from('staff').upsert({
             user_id: user.id,
             contractor_id: contractor.id,
@@ -126,6 +130,8 @@ export const TestLoginHelper = () => {
             is_active: true,
             hourly_rate: 25.00
           }, { onConflict: 'user_id' });
+
+          console.log('✅ Staff Member record created');
         } else {
           throw new Error('Contractor company not found for staff member');
         }
@@ -151,9 +157,9 @@ export const TestLoginHelper = () => {
   return (
     <div className="space-y-4">
       <div className="text-center mb-6">
-        <h3 className="text-lg font-semibold mb-2">Test Login Accounts</h3>
+        <h3 className="text-lg font-semibold mb-2">Clean Test Login Accounts</h3>
         <p className="text-sm text-gray-600">
-          Demo accounts for Contractor Pro SaaS platform
+          Fresh accounts for Contractor Pro SaaS platform testing
         </p>
       </div>
 
@@ -164,7 +170,7 @@ export const TestLoginHelper = () => {
               <CardTitle className="text-lg flex items-center gap-2">
                 {account.type}
                 <Badge variant={account.role === 'admin' ? 'default' : 'outline'}>
-                  {account.role}
+                  {account.badge}
                 </Badge>
               </CardTitle>
             </div>
@@ -192,11 +198,12 @@ export const TestLoginHelper = () => {
       ))}
 
       <div className="mt-6 p-4 bg-blue-50 rounded-lg">
-        <h4 className="font-medium text-blue-900 mb-2">Business Model Clarification:</h4>
+        <h4 className="font-medium text-blue-900 mb-2">Contractor Pro SaaS Business Model:</h4>
         <ul className="text-sm text-blue-800 space-y-1">
-          <li><strong>Platform Admin:</strong> Manages the Contractor Pro SaaS platform</li>
-          <li><strong>Contractor Customer:</strong> Pays for Contractor Pro to manage their business</li>
-          <li><strong>Staff Member:</strong> Employee of a contractor customer</li>
+          <li><strong>Platform Admin:</strong> Contractor Pro employees who manage the SaaS platform</li>
+          <li><strong>Contractor Customer:</strong> Contractors who pay for Contractor Pro subscriptions</li>
+          <li><strong>Staff Member:</strong> Employees of contractor customers</li>
+          <li><strong>Future: Contractor Client:</strong> End customers of contractors (homeowners, etc.)</li>
         </ul>
       </div>
     </div>
