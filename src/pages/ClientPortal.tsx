@@ -127,11 +127,11 @@ const ClientPortal = () => {
             setProfile(mockProfile);
           }
         }
-      } else {
+      } else if (clientResponse) {
         console.log('✅ Client data fetched:', clientResponse);
         
-        // Type assertion for the client response
-        const clientData = clientResponse as ContractorClientRow;
+        // Safe type assertion only after confirming we have valid data
+        const clientData = clientResponse as unknown as ContractorClientRow;
         
         // Get contractor details separately
         const { data: contractorData } = await supabase
