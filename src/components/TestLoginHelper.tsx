@@ -14,39 +14,44 @@ export const TestLoginHelper = () => {
 
   const testAccounts = [
     {
-      id: 'contractor',
-      email: 'contractor@contractorpro.com',
+      id: 'admin',
+      email: 'admin@contractorpro.com',
       password: 'testpass123',
-      type: 'Contractor',
-      description: 'Access to full dashboard with all features',
-      userData: {
-        user_type: 'contractor',
-        company_name: 'Test Construction Co.',
-        contact_name: 'John Contractor'
+      type: 'Platform Admin',
+      description: 'Contractor Pro platform administrator - manages the SaaS platform',
+      role: 'admin'
+    },
+    {
+      id: 'contractor1',
+      email: 'john@acmeconstruction.com',
+      password: 'testpass123',
+      type: 'Contractor Customer',
+      description: 'Paying customer - runs Acme Construction Company',
+      role: 'contractor',
+      companyData: {
+        company_name: 'Acme Construction Co.',
+        contact_name: 'John Smith'
+      }
+    },
+    {
+      id: 'contractor2',
+      email: 'sarah@elitehomes.com',
+      password: 'testpass123',
+      type: 'Contractor Customer',
+      description: 'Paying customer - runs Elite Homes Builder',
+      role: 'contractor',
+      companyData: {
+        company_name: 'Elite Homes Builder',
+        contact_name: 'Sarah Johnson'
       }
     },
     {
       id: 'staff',
-      email: 'staff@contractorpro.com',
+      email: 'mike@acmeconstruction.com',
       password: 'testpass123',
-      type: 'Staff',
-      description: 'Limited access - view jobs and time tracking',
-      userData: {
-        user_type: 'staff'
-      }
-    },
-    {
-      id: 'admin',
-      email: 'admin@contractorpro.com',
-      password: 'testpass123',
-      type: 'Admin',
-      description: 'Full system access with administrative privileges',
-      userData: {
-        user_type: 'contractor',
-        company_name: 'Admin Construction Ltd.',
-        contact_name: 'Admin User',
-        is_admin: true
-      }
+      type: 'Staff Member',
+      description: 'Employee of Acme Construction (works for John Smith)',
+      role: 'staff'
     }
   ];
 
@@ -54,69 +59,89 @@ export const TestLoginHelper = () => {
     setLoading(account.id);
     
     try {
-      console.log('Attempting to create account:', account.email);
+      console.log('Creating test account:', account.email, account.type);
       
-      // Try to sign up first (in case account doesn't exist)
-      const signupResult = await signUp(account.email, account.password, account.userData);
-      console.log('Signup result:', signupResult);
-      
-      // Wait a moment for account creation
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Then try to sign in
-      console.log('Attempting to sign in:', account.email);
-      const { error } = await signIn(account.email, account.password);
-      console.log('Sign in result:', { error });
-      
-      if (error) {
-        console.error('Login error:', error);
-        toast({
-          variant: 'destructive',
-          title: 'Login Error',
-          description: error.message
-        });
-      } else {
-        // For contractor accounts, create the contractor profile if it doesn't exist
-        if (account.userData.user_type === 'contractor') {
-          try {
-            const { data: { user } } = await supabase.auth.getUser();
-            if (user) {
-              // Check if contractor profile exists
-              const { data: existingContractor } = await supabase
-                .from('contractors')
-                .select('id')
-                .eq('user_id', user.id)
-                .single();
-
-              if (!existingContractor) {
-                // Create contractor profile
-                await supabase.from('contractors').insert({
-                  user_id: user.id,
-                  email: account.email,
-                  company_name: account.userData.company_name,
-                  contact_name: account.userData.contact_name,
-                  subscription_plan: 'professional',
-                  is_platform_admin: account.userData.is_admin || false
-                });
-                console.log('Created contractor profile');
-              }
-            }
-          } catch (profileError) {
-            console.error('Error creating contractor profile:', profileError);
-          }
+      // Try to sign up first
+      const { error: signupError } = await supabase.auth.signUp({
+        email: account.email,
+        password: account.password,
+        options: {
+          emailRedirectTo: `${window.location.origin}/dashboard`
         }
-        
-        toast({
-          title: 'Success',
-          description: `Logged in as ${account.type}`
-        });
+      });
+
+      if (signupError && signupError.message !== 'User already registered') {
+        throw signupError;
       }
+
+      // Sign in
+      const { error: signinError } = await signIn(account.email, account.password);
+      if (signinError) {
+        throw signinError;
+      }
+
+      // Get the user to set up their profile
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Failed to get user after login');
+
+      // Set up the user profile based on their role
+      if (account.role === 'admin') {
+        // Create/update contractor record with admin flag
+        await supabase.from('contractors').upsert({
+          user_id: user.id,
+          email: account.email,
+          company_name: 'Contractor Pro',
+          contact_name: 'Platform Admin',
+          subscription_plan: 'enterprise',
+          is_platform_admin: true
+        }, { onConflict: 'user_id' });
+
+      } else if (account.role === 'contractor' && account.companyData) {
+        // Create contractor customer record
+        await supabase.from('contractors').upsert({
+          user_id: user.id,
+          email: account.email,
+          company_name: account.companyData.company_name,
+          contact_name: account.companyData.contact_name,
+          subscription_plan: 'professional',
+          is_platform_admin: false
+        }, { onConflict: 'user_id' });
+
+      } else if (account.role === 'staff') {
+        // Find the contractor they work for (Acme Construction)
+        const { data: contractor } = await supabase
+          .from('contractors')
+          .select('id')
+          .eq('company_name', 'Acme Construction Co.')
+          .single();
+
+        if (contractor) {
+          // Create staff record
+          await supabase.from('staff').upsert({
+            user_id: user.id,
+            contractor_id: contractor.id,
+            email: account.email,
+            first_name: 'Mike',
+            last_name: 'Wilson',
+            is_active: true,
+            hourly_rate: 25.00
+          }, { onConflict: 'user_id' });
+        } else {
+          throw new Error('Contractor company not found for staff member');
+        }
+      }
+
+      toast({
+        title: 'Success',
+        description: `Logged in as ${account.type}`
+      });
+
     } catch (error) {
       console.error('Test login error:', error);
       toast({
         variant: 'destructive',
         title: 'Error',
-        description: 'Failed to create or login to test account'
+        description: error instanceof Error ? error.message : 'Failed to create test account'
       });
     } finally {
       setLoading(null);
@@ -128,7 +153,7 @@ export const TestLoginHelper = () => {
       <div className="text-center mb-6">
         <h3 className="text-lg font-semibold mb-2">Test Login Accounts</h3>
         <p className="text-sm text-gray-600">
-          Click below to create and login to test accounts
+          Demo accounts for Contractor Pro SaaS platform
         </p>
       </div>
 
@@ -138,7 +163,9 @@ export const TestLoginHelper = () => {
             <div className="flex justify-between items-center">
               <CardTitle className="text-lg flex items-center gap-2">
                 {account.type}
-                <Badge variant="outline">{account.id}</Badge>
+                <Badge variant={account.role === 'admin' ? 'default' : 'outline'}>
+                  {account.role}
+                </Badge>
               </CardTitle>
             </div>
           </CardHeader>
@@ -155,8 +182,9 @@ export const TestLoginHelper = () => {
                 onClick={() => handleCreateAndLogin(account)}
                 disabled={loading !== null}
                 className="w-full"
+                variant={account.role === 'admin' ? 'default' : 'outline'}
               >
-                {loading === account.id ? 'Creating & Logging in...' : `Login as ${account.type}`}
+                {loading === account.id ? 'Setting up...' : `Login as ${account.type}`}
               </Button>
             </div>
           </CardContent>
@@ -164,11 +192,11 @@ export const TestLoginHelper = () => {
       ))}
 
       <div className="mt-6 p-4 bg-blue-50 rounded-lg">
-        <h4 className="font-medium text-blue-900 mb-2">What you'll see:</h4>
+        <h4 className="font-medium text-blue-900 mb-2">Business Model Clarification:</h4>
         <ul className="text-sm text-blue-800 space-y-1">
-          <li><strong>Contractor:</strong> Full dashboard with jobs, customers, staff management, time tracking</li>
-          <li><strong>Staff:</strong> Limited dashboard focused on time tracking and assigned jobs</li>
-          <li><strong>Admin:</strong> Full system access with administrative privileges and oversight</li>
+          <li><strong>Platform Admin:</strong> Manages the Contractor Pro SaaS platform</li>
+          <li><strong>Contractor Customer:</strong> Pays for Contractor Pro to manage their business</li>
+          <li><strong>Staff Member:</strong> Employee of a contractor customer</li>
         </ul>
       </div>
     </div>

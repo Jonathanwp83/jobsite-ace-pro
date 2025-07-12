@@ -6,14 +6,12 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { 
   Users, 
   Calendar, 
   DollarSign, 
-  Clock, 
-  FileText
+  Clock
 } from 'lucide-react';
 
 interface ContractorProfile {
@@ -39,7 +37,7 @@ const Dashboard = () => {
   });
 
   useEffect(() => {
-    console.log('🔍 Dashboard useEffect:', { user: user?.email, isAdmin, userRole });
+    console.log('🔍 Dashboard useEffect:', { user: user?.email, isAdmin, userRole, roleLoading });
     
     if (!user) {
       console.log('❌ No user, redirecting to auth');
@@ -47,34 +45,33 @@ const Dashboard = () => {
       return;
     }
     
-    // Wait for role loading to complete before making routing decisions
+    // Wait for role loading to complete
     if (roleLoading) {
       console.log('⏳ Role still loading, waiting...');
       return;
     }
     
-    // Redirect admins to admin dashboard, but only if role detection is complete
+    // Redirect admins to admin dashboard
     if (isAdmin && userRole === 'admin') {
-      console.log('✅ User is admin, redirecting to admin dashboard');
+      console.log('✅ User is platform admin, redirecting to admin dashboard');
       navigate('/admin');
       return;
     }
     
-    // Only contractors and staff should access this dashboard
-    if (userRole && userRole !== 'contractor' && userRole !== 'staff') {
-      console.log('❌ User role not contractor/staff, redirecting to admin');
-      navigate('/admin');
-      return;
-    }
-    
-    if (userRole === 'contractor' || userRole === 'staff') {
-      console.log('✅ User is contractor/staff, fetching data');
-      fetchProfile();
-      fetchStats();
+    // Handle contractors and staff
+    if (userRole === 'contractor') {
+      console.log('✅ User is contractor customer, fetching data');
+      fetchContractorProfile();
+    } else if (userRole === 'staff') {
+      console.log('✅ User is staff member, fetching contractor data');
+      fetchStaffContractorProfile();
+    } else if (userRole === null) {
+      console.log('⚠️ User has no role assigned');
+      setLoading(false);
     }
   }, [user, isAdmin, userRole, roleLoading, navigate]);
 
-  const fetchProfile = async () => {
+  const fetchContractorProfile = async () => {
     try {
       const { data, error } = await supabase
         .from('contractors')
@@ -84,43 +81,62 @@ const Dashboard = () => {
 
       if (error) throw error;
       setProfile(data);
+      await fetchStats(data.id);
     } catch (error) {
-      console.error('Error fetching profile:', error);
+      console.error('Error fetching contractor profile:', error);
     } finally {
       setLoading(false);
     }
   };
 
-  const fetchStats = async () => {
-    if (!user) return;
-
+  const fetchStaffContractorProfile = async () => {
     try {
-      const { data: contractor } = await supabase
-        .from('contractors')
-        .select('id')
-        .eq('user_id', user.id)
+      // Get staff record to find contractor
+      const { data: staffData, error: staffError } = await supabase
+        .from('staff')
+        .select('contractor_id')
+        .eq('user_id', user?.id)
         .single();
 
-      if (!contractor) return;
+      if (staffError) throw staffError;
 
+      // Get contractor profile
+      const { data: contractorData, error: contractorError } = await supabase
+        .from('contractors')
+        .select('*')
+        .eq('id', staffData.contractor_id)
+        .single();
+
+      if (contractorError) throw contractorError;
+      setProfile(contractorData);
+      await fetchStats(contractorData.id);
+    } catch (error) {
+      console.error('Error fetching staff contractor profile:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchStats = async (contractorId: string) => {
+    try {
       // Fetch job count
       const { count: jobCount } = await supabase
         .from('jobs')
         .select('*', { count: 'exact', head: true })
-        .eq('contractor_id', contractor.id)
+        .eq('contractor_id', contractorId)
         .neq('status', 'cancelled');
 
       // Fetch customer count
       const { count: customerCount } = await supabase
         .from('customers')
         .select('*', { count: 'exact', head: true })
-        .eq('contractor_id', contractor.id);
+        .eq('contractor_id', contractorId);
 
       // Fetch staff count
       const { count: staffCount } = await supabase
         .from('staff')
         .select('*', { count: 'exact', head: true })
-        .eq('contractor_id', contractor.id)
+        .eq('contractor_id', contractorId)
         .eq('is_active', true);
 
       setStats({
@@ -134,7 +150,7 @@ const Dashboard = () => {
     }
   };
 
-  if (loading) {
+  if (loading || roleLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
@@ -145,14 +161,14 @@ const Dashboard = () => {
     );
   }
 
-  if (!profile) {
+  if (!profile && userRole !== null) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <Card className="max-w-md">
           <CardHeader>
-            <CardTitle>Welcome to ContractorPro</CardTitle>
+            <CardTitle>Account Setup Required</CardTitle>
             <CardDescription>
-              Your account is being set up. Please refresh the page in a moment.
+              Your account needs to be properly configured. Please contact support.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -165,15 +181,33 @@ const Dashboard = () => {
     );
   }
 
+  if (userRole === null) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <Card className="max-w-md">
+          <CardHeader>
+            <CardTitle>Access Not Configured</CardTitle>
+            <CardDescription>
+              Your account doesn't have the necessary permissions. Please contact your administrator.
+            </CardDescription>
+          </CardHeader>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <DashboardLayout profile={profile}>
       {/* Welcome Section */}
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900">
-          Welcome back, {profile.contact_name}!
+          Welcome back, {profile?.contact_name}!
         </h1>
         <p className="text-gray-600 mt-2">
-          Manage your contracting business with {profile.company_name}
+          {userRole === 'contractor' ? 
+            `Manage your business with ${profile?.company_name}` :
+            `Working for ${profile?.company_name}`
+          }
         </p>
       </div>
 
@@ -213,7 +247,7 @@ const Dashboard = () => {
           <CardContent>
             <div className="text-2xl font-bold">{stats.staff}</div>
             <p className="text-xs text-muted-foreground">
-              of {profile.staff_limit} allowed
+              of {profile?.staff_limit} allowed
             </p>
           </CardContent>
         </Card>
@@ -230,59 +264,55 @@ const Dashboard = () => {
         </Card>
       </div>
 
-      {/* Getting Started Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>Getting Started</CardTitle>
-            <CardDescription>
-              Complete these steps to set up your contractor business
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center justify-between">
-              <span className="text-sm">Add your first customer</span>
-              <Button size="sm" variant="outline" onClick={() => navigate('/customers')}>
-                Add Customer
-              </Button>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-sm">Create your first job</span>
-              <Button size="sm" variant="outline" onClick={() => navigate('/jobs')}>
-                Create Job
-              </Button>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-sm">Invite staff members</span>
-              <Button size="sm" variant="outline" disabled>
-                Coming Soon
-              </Button>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-sm">Set up billing information</span>
-              <Button size="sm" variant="outline" disabled>
-                Coming Soon
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+      {/* Getting Started Section - Only for contractors */}
+      {userRole === 'contractor' && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Getting Started</CardTitle>
+              <CardDescription>
+                Complete these steps to set up your contractor business
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center justify-between">
+                <span className="text-sm">Add your first customer</span>
+                <Button size="sm" variant="outline" onClick={() => navigate('/customers')}>
+                  Add Customer
+                </Button>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm">Create your first job</span>
+                <Button size="sm" variant="outline" onClick={() => navigate('/jobs')}>
+                  Create Job
+                </Button>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm">Invite staff members</span>
+                <Button size="sm" variant="outline" onClick={() => navigate('/staff')}>
+                  Manage Staff
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Recent Activity</CardTitle>
-            <CardDescription>
-              Your latest business activities
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="text-center text-gray-500 py-8">
-              <FileText className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-              <p>No recent activity</p>
-              <p className="text-sm">Activity will appear here as you use the system</p>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+          <Card>
+            <CardHeader>
+              <CardTitle>Recent Activity</CardTitle>
+              <CardDescription>
+                Your latest business activities
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="text-center text-gray-500 py-8">
+                <Clock className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+                <p>No recent activity</p>
+                <p className="text-sm">Activity will appear here as you use the system</p>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
     </DashboardLayout>
   );
 };

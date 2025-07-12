@@ -1,3 +1,4 @@
+
 import { useState, useEffect, createContext, useContext, ReactNode } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
@@ -39,38 +40,49 @@ export const RoleProvider = ({ children }: { children: ReactNode }) => {
     console.log('🔍 Fetching role for user:', user.email, user.id);
 
     try {
-      // Use the improved get_user_role function that checks both admin flags and user_roles
-      const { data, error } = await supabase.rpc('get_user_role', {
-        _user_id: user.id
-      });
+      // First check if user is a Contractor Pro platform admin
+      const { data: contractorData } = await supabase
+        .from('contractors')
+        .select('is_platform_admin, id')
+        .eq('user_id', user.id)
+        .single();
 
-      console.log('🔍 RPC get_user_role result:', { data, error });
-
-      if (error) {
-        console.error('❌ Error fetching user role:', error);
-        // Fallback: check if user is platform admin in contractors table
-        const { data: contractorData } = await supabase
-          .from('contractors')
-          .select('is_platform_admin, email')
-          .eq('user_id', user.id)
-          .single();
-        
-        console.log('🔍 Fallback contractor data:', contractorData);
-        
-        if (contractorData?.is_platform_admin) {
-          console.log('✅ User detected as admin via fallback');
-          setUserRole('admin');
-        } else {
-          console.log('✅ User detected as contractor via fallback');
-          setUserRole('contractor');
-        }
-      } else {
-        console.log('✅ User role detected via RPC:', data);
-        setUserRole(data as UserRole);
+      if (contractorData?.is_platform_admin) {
+        console.log('✅ User is Contractor Pro platform admin');
+        setUserRole('admin');
+        setLoading(false);
+        return;
       }
+
+      // If they have a contractor record, they're a contractor (your customer)
+      if (contractorData?.id) {
+        console.log('✅ User is a contractor customer');
+        setUserRole('contractor');
+        setLoading(false);
+        return;
+      }
+
+      // Check if they're staff of a contractor
+      const { data: staffData } = await supabase
+        .from('staff')
+        .select('id, contractor_id')
+        .eq('user_id', user.id)
+        .eq('is_active', true)
+        .single();
+
+      if (staffData?.id) {
+        console.log('✅ User is staff member');
+        setUserRole('staff');
+        setLoading(false);
+        return;
+      }
+
+      // If no records found, they might be a new user
+      console.log('⚠️ User has no contractor or staff record');
+      setUserRole(null);
     } catch (error) {
       console.error('❌ Error fetching user role:', error);
-      setUserRole('contractor');
+      setUserRole(null);
     } finally {
       setLoading(false);
     }
