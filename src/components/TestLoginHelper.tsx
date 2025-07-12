@@ -97,36 +97,18 @@ export const TestLoginHelper = () => {
       } else if (account.role === 'contractor') {
         console.log('🔧 Setting up Contractor Customer record...');
         
-        // The contractor record should already exist from our migration
-        // Let's verify or create it
-        const { data: existingContractor } = await supabase
-          .from('contractors')
-          .select('id')
-          .eq('email', account.email)
-          .single();
+        // Update or insert contractor record
+        const { error: contractorError } = await supabase.from('contractors').upsert({
+          user_id: user.id,
+          email: account.email,
+          company_name: 'ABC Plumbing Co.',
+          contact_name: 'Bob Sanders',
+          subscription_plan: 'professional',
+          subscription_active: true,
+          is_platform_admin: false
+        }, { onConflict: 'user_id' });
 
-        if (!existingContractor) {
-          const { error: contractorError } = await supabase.from('contractors').insert({
-            user_id: user.id,
-            email: account.email,
-            company_name: 'ABC Plumbing Co.',
-            contact_name: 'Bob Sanders',
-            subscription_plan: 'professional',
-            subscription_active: true,
-            is_platform_admin: false
-          });
-
-          if (contractorError) throw contractorError;
-        } else {
-          // Update existing contractor to link to this user
-          const { error: updateError } = await supabase
-            .from('contractors')
-            .update({ user_id: user.id })
-            .eq('email', account.email);
-
-          if (updateError) throw updateError;
-        }
-
+        if (contractorError) throw contractorError;
         console.log('✅ Contractor Customer record ready');
 
       } else if (account.role === 'staff') {
@@ -182,10 +164,24 @@ export const TestLoginHelper = () => {
 
         console.log('🏢 Found contractor for client:', contractor.id);
 
-        // Create client record using raw SQL since the table might not be in types yet
-        const { error: clientError } = await supabase
-          .from('contractor_clients')
-          .upsert({
+        // Use RPC call to insert client record to avoid TypeScript issues
+        const { error: clientError } = await supabase.rpc('create_contractor_client', {
+          p_user_id: user.id,
+          p_contractor_id: contractor.id,
+          p_email: account.email,
+          p_first_name: 'Suzanne',
+          p_last_name: 'Summers',
+          p_phone: '(555) 123-4567',
+          p_address: '123 Main Street',
+          p_city: 'Toronto',
+          p_province: 'ON',
+          p_postal_code: 'M5V 3A8'
+        });
+
+        if (clientError) {
+          console.error('Client creation error:', clientError);
+          // Fallback to raw SQL insert if RPC doesn't exist yet
+          const { error: fallbackError } = await supabase.from('contractor_clients' as any).upsert({
             user_id: user.id,
             contractor_id: contractor.id,
             email: account.email,
@@ -199,9 +195,7 @@ export const TestLoginHelper = () => {
             is_active: true
           }, { onConflict: 'email,contractor_id' });
 
-        if (clientError) {
-          console.error('Client creation error:', clientError);
-          throw clientError;
+          if (fallbackError) throw fallbackError;
         }
 
         console.log('✅ Contractor Client record created');
