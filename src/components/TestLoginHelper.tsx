@@ -164,38 +164,24 @@ export const TestLoginHelper = () => {
 
         console.log('🏢 Found contractor for client:', contractor.id);
 
-        // Use RPC call to insert client record to avoid TypeScript issues
-        const { error: clientError } = await supabase.rpc('create_contractor_client', {
-          p_user_id: user.id,
-          p_contractor_id: contractor.id,
-          p_email: account.email,
-          p_first_name: 'Suzanne',
-          p_last_name: 'Summers',
-          p_phone: '(555) 123-4567',
-          p_address: '123 Main Street',
-          p_city: 'Toronto',
-          p_province: 'ON',
-          p_postal_code: 'M5V 3A8'
-        });
+        // Direct insert to contractor_clients table
+        const { error: clientError } = await supabase.from('contractor_clients' as any).upsert({
+          user_id: user.id,
+          contractor_id: contractor.id,
+          email: account.email,
+          first_name: 'Suzanne',
+          last_name: 'Summers',
+          phone: '(555) 123-4567',
+          address: '123 Main Street',
+          city: 'Toronto',
+          province: 'ON',
+          postal_code: 'M5V 3A8',
+          is_active: true
+        }, { onConflict: 'email,contractor_id' });
 
         if (clientError) {
           console.error('Client creation error:', clientError);
-          // Fallback to raw SQL insert if RPC doesn't exist yet
-          const { error: fallbackError } = await supabase.from('contractor_clients' as any).upsert({
-            user_id: user.id,
-            contractor_id: contractor.id,
-            email: account.email,
-            first_name: 'Suzanne',
-            last_name: 'Summers',
-            phone: '(555) 123-4567',
-            address: '123 Main Street',
-            city: 'Toronto',
-            province: 'ON',
-            postal_code: 'M5V 3A8',
-            is_active: true
-          }, { onConflict: 'email,contractor_id' });
-
-          if (fallbackError) throw fallbackError;
+          throw clientError;
         }
 
         console.log('✅ Contractor Client record created');

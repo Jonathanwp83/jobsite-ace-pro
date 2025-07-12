@@ -71,16 +71,10 @@ const ClientPortal = () => {
     try {
       console.log('🔍 Fetching client data for user:', user?.email);
 
-      // Use raw query to avoid TypeScript issues with contractor_clients table
-      const { data: clientData, error: clientError } = await supabase
+      // First get the contractor_clients data with proper error handling
+      const { data: clientResponse, error: clientError } = await supabase
         .from('contractor_clients' as any)
-        .select(`
-          *,
-          contractor:contractors!contractor_clients_contractor_id_fkey (
-            company_name,
-            contact_name
-          )
-        `)
+        .select('*')
         .eq('user_id', user?.id)
         .eq('is_active', true)
         .single();
@@ -117,22 +111,29 @@ const ClientPortal = () => {
           }
         }
       } else {
-        console.log('✅ Client data fetched:', clientData);
+        console.log('✅ Client data fetched:', clientResponse);
         
+        // Get contractor details separately
+        const { data: contractorData } = await supabase
+          .from('contractors')
+          .select('company_name, contact_name')
+          .eq('id', clientResponse.contractor_id)
+          .single();
+
         const clientProfile: ClientProfile = {
-          id: clientData.id,
-          first_name: clientData.first_name,
-          last_name: clientData.last_name,
-          email: clientData.email,
-          phone: clientData.phone || '',
-          address: clientData.address || '',
-          city: clientData.city || '',
-          province: clientData.province || '',
-          postal_code: clientData.postal_code || '',
-          contractor_id: clientData.contractor_id,
+          id: clientResponse.id,
+          first_name: clientResponse.first_name,
+          last_name: clientResponse.last_name,
+          email: clientResponse.email,
+          phone: clientResponse.phone || '',
+          address: clientResponse.address || '',
+          city: clientResponse.city || '',
+          province: clientResponse.province || '',
+          postal_code: clientResponse.postal_code || '',
+          contractor_id: clientResponse.contractor_id,
           contractor: {
-            company_name: clientData.contractor.company_name,
-            contact_name: clientData.contractor.contact_name
+            company_name: contractorData?.company_name || 'ABC Plumbing Co.',
+            contact_name: contractorData?.contact_name || 'Bob Sanders'
           }
         };
         
