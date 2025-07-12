@@ -8,6 +8,7 @@ import { Toaster } from '@/components/ui/toaster';
 import Index from '@/pages/Index';
 import Auth from '@/pages/Auth';
 import Dashboard from '@/pages/Dashboard';
+import ClientPortal from '@/pages/ClientPortal';
 import Jobs from '@/pages/Jobs';
 import Customers from '@/pages/Customers';
 import Staff from '@/pages/Staff';
@@ -38,6 +39,7 @@ function App() {
                 <Route path="/" element={<Index />} />
                 <Route path="/auth" element={<Auth />} />
                 <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/client-portal" element={<ClientPortal />} />
                 <Route path="/admin" element={<AdminDashboard />} />
                 <Route path="/admin/contractors" element={<AdminContractors />} />
                 <Route path="/admin/analytics" element={<AdminAnalytics />} />

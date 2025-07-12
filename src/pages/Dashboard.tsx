@@ -25,7 +25,7 @@ interface ContractorProfile {
 
 const Dashboard = () => {
   const { user } = useAuth();
-  const { userRole, isAdmin, loading: roleLoading } = useRole();
+  const { userRole, isAdmin, isClient, loading: roleLoading } = useRole();
   const navigate = useNavigate();
   const [profile, setProfile] = useState<ContractorProfile | null>(null);
   const [loading, setLoading] = useState(true);
@@ -51,10 +51,16 @@ const Dashboard = () => {
       return;
     }
     
-    // Redirect Platform Admins to admin dashboard
+    // Redirect based on user role
     if (isAdmin && userRole === 'admin') {
       console.log('✅ User is Platform Admin, redirecting to admin dashboard');
       navigate('/admin');
+      return;
+    }
+    
+    if (isClient && userRole === 'client') {
+      console.log('✅ User is Contractor Client, redirecting to client portal');
+      navigate('/client-portal');
       return;
     }
     
@@ -69,7 +75,7 @@ const Dashboard = () => {
       console.log('⚠️ User has no role assigned');
       setLoading(false);
     }
-  }, [user, isAdmin, userRole, roleLoading, navigate]);
+  }, [user, isAdmin, userRole, isClient, roleLoading, navigate]);
 
   const fetchContractorProfile = async () => {
     try {
@@ -127,11 +133,12 @@ const Dashboard = () => {
         .eq('contractor_id', contractorId)
         .neq('status', 'cancelled');
 
-      // Fetch customer count
+      // Fetch customer count (contractor_clients)
       const { count: customerCount } = await supabase
-        .from('customers')
+        .from('contractor_clients')
         .select('*', { count: 'exact', head: true })
-        .eq('contractor_id', contractorId);
+        .eq('contractor_id', contractorId)
+        .eq('is_active', true);
 
       // Fetch staff count
       const { count: staffCount } = await supabase
@@ -197,6 +204,7 @@ const Dashboard = () => {
               <p className="text-sm text-gray-600">
                 If you're a contractor customer, please ensure your subscription is active.
                 If you're a staff member, please contact your contractor to ensure your account is properly set up.
+                If you're a client, you should be redirected to the client portal automatically.
               </p>
               <Button onClick={() => navigate('/auth')} className="w-full">
                 Back to Login
@@ -240,13 +248,13 @@ const Dashboard = () => {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Customers</CardTitle>
+            <CardTitle className="text-sm font-medium">Clients</CardTitle>
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats.customers}</div>
             <p className="text-xs text-muted-foreground">
-              {stats.customers === 0 ? 'No customers yet' : 'total customers'}
+              {stats.customers === 0 ? 'No clients yet' : 'total clients'}
             </p>
           </CardContent>
         </Card>
@@ -288,9 +296,9 @@ const Dashboard = () => {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex items-center justify-between">
-                <span className="text-sm">Add your first customer</span>
+                <span className="text-sm">Add your first client</span>
                 <Button size="sm" variant="outline" onClick={() => navigate('/customers')}>
-                  Add Customer
+                  Add Client
                 </Button>
               </div>
               <div className="flex items-center justify-between">
@@ -320,6 +328,56 @@ const Dashboard = () => {
                 <Clock className="h-12 w-12 mx-auto mb-4 text-gray-300" />
                 <p>No recent activity</p>
                 <p className="text-sm">Activity will appear here as you use the system</p>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* Staff Member Quick Access */}
+      {userRole === 'staff' && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Staff Quick Actions</CardTitle>
+              <CardDescription>
+                Common tasks for customer service staff
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center justify-between">
+                <span className="text-sm">Manage clients</span>
+                <Button size="sm" variant="outline" onClick={() => navigate('/customers')}>
+                  View Clients
+                </Button>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm">View invoices</span>
+                <Button size="sm" variant="outline" onClick={() => navigate('/invoices')}>
+                  View Invoices
+                </Button>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm">Schedule jobs</span>
+                <Button size="sm" variant="outline" onClick={() => navigate('/jobs')}>
+                  Manage Jobs
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Today's Tasks</CardTitle>
+              <CardDescription>
+                Your assigned tasks for today
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="text-center text-gray-500 py-8">
+                <Clock className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+                <p>No tasks assigned</p>
+                <p className="text-sm">Tasks will appear here when assigned</p>
               </div>
             </CardContent>
           </Card>

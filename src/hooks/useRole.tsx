@@ -3,7 +3,7 @@ import { useState, useEffect, createContext, useContext, ReactNode } from 'react
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 
-type UserRole = 'admin' | 'contractor' | 'staff' | null;
+type UserRole = 'admin' | 'contractor' | 'staff' | 'client' | null;
 
 interface RoleContextType {
   userRole: UserRole;
@@ -11,6 +11,7 @@ interface RoleContextType {
   isAdmin: boolean;
   isContractor: boolean;
   isStaff: boolean;
+  isClient: boolean;
   refreshRole: () => Promise<void>;
 }
 
@@ -85,6 +86,21 @@ export const RoleProvider = ({ children }: { children: ReactNode }) => {
         return;
       }
 
+      // PHASE 4: Check if user is Contractor Client (end customer)
+      const { data: clientData } = await supabase
+        .from('contractor_clients')
+        .select('id, contractor_id')
+        .eq('user_id', user.id)
+        .eq('is_active', true)
+        .single();
+
+      if (clientData?.id) {
+        console.log('✅ User is Contractor Client (end customer)');
+        setUserRole('client');
+        setLoading(false);
+        return;
+      }
+
       // If no role found
       console.log('⚠️ User has no assigned role');
       setUserRole(null);
@@ -111,6 +127,7 @@ export const RoleProvider = ({ children }: { children: ReactNode }) => {
     isAdmin: userRole === 'admin',
     isContractor: userRole === 'contractor',
     isStaff: userRole === 'staff',
+    isClient: userRole === 'client',
     refreshRole,
   };
 

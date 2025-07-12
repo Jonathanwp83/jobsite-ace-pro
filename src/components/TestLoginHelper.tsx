@@ -23,39 +23,35 @@ export const TestLoginHelper = () => {
       badge: 'Platform'
     },
     {
-      id: 'contractor-customer-1',
-      email: 'john@acmeconstruction.com',
+      id: 'contractor-customer',
+      email: 'bob@abcplumbing.com',
       password: 'testpass123',
       type: 'Contractor Customer',
-      description: 'Paying customer - owns Acme Construction Company',
-      role: 'contractor',
+      description: 'Owner of ABC Plumbing Co. - pays for Contractor Pro subscription',
+      role: 'contractor', 
       badge: 'Customer',
       companyData: {
-        company_name: 'Acme Construction Co.',
-        contact_name: 'John Smith'
-      }
-    },
-    {
-      id: 'contractor-customer-2',
-      email: 'sarah@elitehomes.com',
-      password: 'testpass123',
-      type: 'Contractor Customer',
-      description: 'Paying customer - owns Elite Homes Builder',
-      role: 'contractor',
-      badge: 'Customer',
-      companyData: {
-        company_name: 'Elite Homes Builder',
-        contact_name: 'Sarah Johnson'
+        company_name: 'ABC Plumbing Co.',
+        contact_name: 'Bob Sanders'
       }
     },
     {
       id: 'staff-member',
-      email: 'mike@acmeconstruction.com',
+      email: 'thomas@abcplumbing.com',
       password: 'testpass123',
       type: 'Staff Member',
-      description: 'Employee of Acme Construction (works for John Smith)',
+      description: 'Customer service staff at ABC Plumbing Co. - manages clients and schedules',
       role: 'staff',
       badge: 'Staff'
+    },
+    {
+      id: 'contractor-client',
+      email: 'suzanne@email.com',
+      password: 'testpass123',
+      type: 'Contractor Client',
+      description: 'End customer of ABC Plumbing Co. - can view invoices and job status',
+      role: 'client',
+      badge: 'Client'
     }
   ];
 
@@ -113,11 +109,11 @@ export const TestLoginHelper = () => {
         console.log('✅ Contractor Customer record created');
 
       } else if (account.role === 'staff') {
-        // Staff Member: Find the contractor they work for and create staff record
+        // Staff Member: Find ABC Plumbing Co. and create staff record
         const { data: contractor } = await supabase
           .from('contractors')
           .select('id')
-          .eq('company_name', 'Acme Construction Co.')
+          .eq('company_name', 'ABC Plumbing Co.')
           .single();
 
         if (contractor) {
@@ -125,15 +121,51 @@ export const TestLoginHelper = () => {
             user_id: user.id,
             contractor_id: contractor.id,
             email: account.email,
-            first_name: 'Mike',
-            last_name: 'Wilson',
+            first_name: 'Thomas',
+            last_name: 'McKay',
             is_active: true,
-            hourly_rate: 25.00
+            hourly_rate: 28.00,
+            permissions: {
+              can_view_jobs: true,
+              can_edit_jobs: true,
+              can_manage_clients: true,
+              can_view_invoices: true,
+              can_accept_payments: true,
+              can_schedule_jobs: true
+            }
           }, { onConflict: 'user_id' });
 
           console.log('✅ Staff Member record created');
         } else {
-          throw new Error('Contractor company not found for staff member');
+          throw new Error('ABC Plumbing Co. not found for staff member');
+        }
+
+      } else if (account.role === 'client') {
+        // Contractor Client: Find ABC Plumbing Co. and create client record
+        const { data: contractor } = await supabase
+          .from('contractors')
+          .select('id')
+          .eq('company_name', 'ABC Plumbing Co.')
+          .single();
+
+        if (contractor) {
+          await supabase.from('contractor_clients').upsert({
+            user_id: user.id,
+            contractor_id: contractor.id,
+            first_name: 'Suzanne',
+            last_name: 'Summers',
+            email: account.email,
+            phone: '(555) 123-4567',
+            address: '123 Main Street',
+            city: 'Toronto',
+            province: 'ON',
+            postal_code: 'M5V 3A8',
+            is_active: true
+          }, { onConflict: 'email,contractor_id' });
+
+          console.log('✅ Contractor Client record created');
+        } else {
+          throw new Error('ABC Plumbing Co. not found for client');
         }
       }
 
@@ -157,9 +189,9 @@ export const TestLoginHelper = () => {
   return (
     <div className="space-y-4">
       <div className="text-center mb-6">
-        <h3 className="text-lg font-semibold mb-2">Clean Test Login Accounts</h3>
+        <h3 className="text-lg font-semibold mb-2">ABC Plumbing Co. Test Accounts</h3>
         <p className="text-sm text-gray-600">
-          Fresh accounts for Contractor Pro SaaS platform testing
+          Complete 4-tier business model testing accounts
         </p>
       </div>
 
@@ -198,12 +230,12 @@ export const TestLoginHelper = () => {
       ))}
 
       <div className="mt-6 p-4 bg-blue-50 rounded-lg">
-        <h4 className="font-medium text-blue-900 mb-2">Contractor Pro SaaS Business Model:</h4>
+        <h4 className="font-medium text-blue-900 mb-2">ABC Plumbing Co. Business Structure:</h4>
         <ul className="text-sm text-blue-800 space-y-1">
-          <li><strong>Platform Admin:</strong> Contractor Pro employees who manage the SaaS platform</li>
-          <li><strong>Contractor Customer:</strong> Contractors who pay for Contractor Pro subscriptions</li>
-          <li><strong>Staff Member:</strong> Employees of contractor customers</li>
-          <li><strong>Future: Contractor Client:</strong> End customers of contractors (homeowners, etc.)</li>
+          <li><strong>Platform Admin:</strong> Contractor Pro employee (manages SaaS platform)</li>
+          <li><strong>Contractor Customer:</strong> Bob Sanders (owns ABC Plumbing Co.)</li>
+          <li><strong>Staff Member:</strong> Thomas McKay (customer service for ABC Plumbing Co.)</li>
+          <li><strong>Contractor Client:</strong> Suzanne Summers (end customer of ABC Plumbing Co.)</li>
         </ul>
       </div>
     </div>
