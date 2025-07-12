@@ -87,12 +87,12 @@ export const RoleProvider = ({ children }: { children: ReactNode }) => {
       }
 
       // PHASE 4: Check if user is Contractor Client (end customer)
-      // Use raw SQL query since TypeScript types don't include contractor_clients yet
-      const { data: clientData, error: clientError } = await supabase.rpc('get_user_role', {
+      // Use the get_user_role function which now supports 'client' role
+      const { data: roleData, error: roleError } = await supabase.rpc('get_user_role', {
         _user_id: user.id
       });
 
-      if (!clientError && clientData === 'client') {
+      if (!roleError && roleData && (roleData as string) === 'client') {
         console.log('✅ User is Contractor Client (end customer)');
         setUserRole('client');
         setLoading(false);
