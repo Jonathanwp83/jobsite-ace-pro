@@ -141,7 +141,7 @@ export const TestLoginHelper = () => {
         }
 
       } else if (account.role === 'client') {
-        // Contractor Client: Find ABC Plumbing Co. and create client record
+        // Contractor Client: Find ABC Plumbing Co. and create client record using raw SQL
         const { data: contractor } = await supabase
           .from('contractors')
           .select('id')
@@ -149,19 +149,58 @@ export const TestLoginHelper = () => {
           .single();
 
         if (contractor) {
-          await supabase.from('contractor_clients').upsert({
-            user_id: user.id,
-            contractor_id: contractor.id,
-            first_name: 'Suzanne',
-            last_name: 'Summers',
-            email: account.email,
-            phone: '(555) 123-4567',
-            address: '123 Main Street',
-            city: 'Toronto',
-            province: 'ON',
-            postal_code: 'M5V 3A8',
-            is_active: true
-          }, { onConflict: 'email,contractor_id' });
+          // Use raw SQL to insert into contractor_clients since types aren't updated yet
+          const { error: clientError } = await supabase.rpc('sql', {
+            query: `
+              INSERT INTO public.contractor_clients (
+                user_id, contractor_id, first_name, last_name, email, phone, 
+                address, city, province, postal_code, is_active
+              ) VALUES (
+                $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11
+              )
+              ON CONFLICT (email, contractor_id) DO UPDATE SET
+                user_id = EXCLUDED.user_id,
+                first_name = EXCLUDED.first_name,
+                last_name = EXCLUDED.last_name,
+                phone = EXCLUDED.phone,
+                address = EXCLUDED.address,
+                city = EXCLUDED.city,
+                province = EXCLUDED.province,
+                postal_code = EXCLUDED.postal_code,
+                is_active = EXCLUDED.is_active
+            `,
+            args: [
+              user.id,
+              contractor.id,
+              'Suzanne',
+              'Summers',
+              account.email,
+              '(555) 123-4567',
+              '123 Main Street',
+              'Toronto',
+              'ON',
+              'M5V 3A8',
+              true
+            ]
+          });
+
+          if (clientError) {
+            // Fallback: direct SQL execution
+            await supabase.sql`
+              INSERT INTO public.contractor_clients (
+                user_id, contractor_id, first_name, last_name, email, phone, 
+                address, city, province, postal_code, is_active
+              ) VALUES (
+                ${user.id}, ${contractor.id}, 'Suzanne', 'Summers', ${account.email}, 
+                '(555) 123-4567', '123 Main Street', 'Toronto', 'ON', 'M5V 3A8', true
+              )
+              ON CONFLICT (email, contractor_id) DO UPDATE SET
+                user_id = EXCLUDED.user_id,
+                first_name = EXCLUDED.first_name,
+                last_name = EXCLUDED.last_name,
+                is_active = EXCLUDED.is_active
+            `;
+          }
 
           console.log('✅ Contractor Client record created');
         } else {

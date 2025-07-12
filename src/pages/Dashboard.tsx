@@ -133,12 +133,11 @@ const Dashboard = () => {
         .eq('contractor_id', contractorId)
         .neq('status', 'cancelled');
 
-      // Fetch customer count (contractor_clients)
+      // Fetch customer count (customers table, not contractor_clients)
       const { count: customerCount } = await supabase
-        .from('contractor_clients')
+        .from('customers')
         .select('*', { count: 'exact', head: true })
-        .eq('contractor_id', contractorId)
-        .eq('is_active', true);
+        .eq('contractor_id', contractorId);
 
       // Fetch staff count
       const { count: staffCount } = await supabase
