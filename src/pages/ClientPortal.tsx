@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useRole } from '@/hooks/useRole';
@@ -43,6 +42,24 @@ interface Invoice {
   created_at: string;
 }
 
+// Type definition for contractor_clients table row
+interface ContractorClientRow {
+  id: string;
+  user_id: string;
+  contractor_id: string;
+  email: string;
+  first_name: string;
+  last_name: string;
+  phone: string | null;
+  address: string | null;
+  city: string | null;
+  province: string | null;
+  postal_code: string | null;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
 const ClientPortal = () => {
   const { user } = useAuth();
   const { userRole, isClient, loading: roleLoading } = useRole();
@@ -71,7 +88,7 @@ const ClientPortal = () => {
     try {
       console.log('🔍 Fetching client data for user:', user?.email);
 
-      // First get the contractor_clients data with proper error handling
+      // First get the contractor_clients data with proper error handling and type assertion
       const { data: clientResponse, error: clientError } = await supabase
         .from('contractor_clients' as any)
         .select('*')
@@ -113,24 +130,27 @@ const ClientPortal = () => {
       } else {
         console.log('✅ Client data fetched:', clientResponse);
         
+        // Type assertion for the client response
+        const clientData = clientResponse as ContractorClientRow;
+        
         // Get contractor details separately
         const { data: contractorData } = await supabase
           .from('contractors')
           .select('company_name, contact_name')
-          .eq('id', clientResponse.contractor_id)
+          .eq('id', clientData.contractor_id)
           .single();
 
         const clientProfile: ClientProfile = {
-          id: clientResponse.id,
-          first_name: clientResponse.first_name,
-          last_name: clientResponse.last_name,
-          email: clientResponse.email,
-          phone: clientResponse.phone || '',
-          address: clientResponse.address || '',
-          city: clientResponse.city || '',
-          province: clientResponse.province || '',
-          postal_code: clientResponse.postal_code || '',
-          contractor_id: clientResponse.contractor_id,
+          id: clientData.id,
+          first_name: clientData.first_name,
+          last_name: clientData.last_name,
+          email: clientData.email,
+          phone: clientData.phone || '',
+          address: clientData.address || '',
+          city: clientData.city || '',
+          province: clientData.province || '',
+          postal_code: clientData.postal_code || '',
+          contractor_id: clientData.contractor_id,
           contractor: {
             company_name: contractorData?.company_name || 'ABC Plumbing Co.',
             contact_name: contractorData?.contact_name || 'Bob Sanders'
