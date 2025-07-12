@@ -29,11 +29,7 @@ export const TestLoginHelper = () => {
       type: 'Contractor Customer',
       description: 'Owner of ABC Plumbing Co. - pays for Contractor Pro subscription',
       role: 'contractor', 
-      badge: 'Customer',
-      companyData: {
-        company_name: 'ABC Plumbing Co.',
-        contact_name: 'Bob Sanders'
-      }
+      badge: 'Customer'
     },
     {
       id: 'staff-member',
@@ -59,7 +55,7 @@ export const TestLoginHelper = () => {
     setLoading(account.id);
     
     try {
-      console.log('Creating clean test account:', account.email, account.type);
+      console.log('🚀 Creating test account:', account.email, account.type);
       
       // Try to sign up first (will handle existing users gracefully)
       const { error: signupError } = await supabase.auth.signUp({
@@ -84,98 +80,159 @@ export const TestLoginHelper = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Failed to get user after login');
 
+      console.log('👤 User authenticated:', user.id, user.email);
+
       // Set up user profile based on their role
       if (account.role === 'admin') {
-        // Platform Admin: Create user_roles entry
-        await supabase.from('user_roles').upsert({
+        console.log('🔧 Setting up Platform Admin role...');
+        
+        const { error: adminError } = await supabase.from('user_roles').upsert({
           user_id: user.id,
           role: 'admin'
         }, { onConflict: 'user_id,role' });
 
+        if (adminError) throw adminError;
         console.log('✅ Platform Admin role created');
 
-      } else if (account.role === 'contractor' && account.companyData) {
-        // Contractor Customer: Create contractors record
-        await supabase.from('contractors').upsert({
-          user_id: user.id,
-          email: account.email,
-          company_name: account.companyData.company_name,
-          contact_name: account.companyData.contact_name,
-          subscription_plan: 'professional',
-          subscription_active: true,
-          is_platform_admin: false
-        }, { onConflict: 'user_id' });
+      } else if (account.role === 'contractor') {
+        console.log('🔧 Setting up Contractor Customer record...');
+        
+        // The contractor record should already exist from our migration
+        // Let's verify or create it
+        const { data: existingContractor } = await supabase
+          .from('contractors')
+          .select('id')
+          .eq('email', account.email)
+          .single();
 
-        console.log('✅ Contractor Customer record created');
+        if (!existingContractor) {
+          const { error: contractorError } = await supabase.from('contractors').insert({
+            user_id: user.id,
+            email: account.email,
+            company_name: 'ABC Plumbing Co.',
+            contact_name: 'Bob Sanders',
+            subscription_plan: 'professional',
+            subscription_active: true,
+            is_platform_admin: false
+          });
+
+          if (contractorError) throw contractorError;
+        } else {
+          // Update existing contractor to link to this user
+          const { error: updateError } = await supabase
+            .from('contractors')
+            .update({ user_id: user.id })
+            .eq('email', account.email);
+
+          if (updateError) throw updateError;
+        }
+
+        console.log('✅ Contractor Customer record ready');
 
       } else if (account.role === 'staff') {
-        // Staff Member: Find ABC Plumbing Co. and create staff record
-        const { data: contractor } = await supabase
+        console.log('🔧 Setting up Staff Member record...');
+        
+        // Find ABC Plumbing Co. contractor
+        const { data: contractor, error: contractorError } = await supabase
           .from('contractors')
           .select('id')
           .eq('company_name', 'ABC Plumbing Co.')
           .single();
 
-        if (contractor) {
-          await supabase.from('staff').upsert({
+        if (contractorError || !contractor) {
+          throw new Error('ABC Plumbing Co. contractor not found. Please set up contractor first.');
+        }
+
+        console.log('🏢 Found contractor:', contractor.id);
+
+        const { error: staffError } = await supabase.from('staff').upsert({
+          user_id: user.id,
+          contractor_id: contractor.id,
+          email: account.email,
+          first_name: 'Thomas',
+          last_name: 'McKay',
+          is_active: true,
+          hourly_rate: 28.00,
+          permissions: {
+            can_view_jobs: true,
+            can_edit_jobs: true,
+            can_manage_clients: true,
+            can_view_invoices: true,
+            can_accept_payments: true,
+            can_schedule_jobs: true
+          }
+        }, { onConflict: 'user_id' });
+
+        if (staffError) throw staffError;
+        console.log('✅ Staff Member record created');
+
+      } else if (account.role === 'client') {
+        console.log('🔧 Setting up Contractor Client record...');
+        
+        // Find ABC Plumbing Co. contractor
+        const { data: contractor, error: contractorError } = await supabase
+          .from('contractors')
+          .select('id')
+          .eq('company_name', 'ABC Plumbing Co.')
+          .single();
+
+        if (contractorError || !contractor) {
+          throw new Error('ABC Plumbing Co. contractor not found. Please set up contractor first.');
+        }
+
+        console.log('🏢 Found contractor for client:', contractor.id);
+
+        // Create client record using raw SQL since the table might not be in types yet
+        const { error: clientError } = await supabase
+          .from('contractor_clients')
+          .upsert({
             user_id: user.id,
             contractor_id: contractor.id,
             email: account.email,
-            first_name: 'Thomas',
-            last_name: 'McKay',
-            is_active: true,
-            hourly_rate: 28.00,
-            permissions: {
-              can_view_jobs: true,
-              can_edit_jobs: true,
-              can_manage_clients: true,
-              can_view_invoices: true,
-              can_accept_payments: true,
-              can_schedule_jobs: true
-            }
-          }, { onConflict: 'user_id' });
+            first_name: 'Suzanne',
+            last_name: 'Summers',
+            phone: '(555) 123-4567',
+            address: '123 Main Street',
+            city: 'Toronto',
+            province: 'ON',
+            postal_code: 'M5V 3A8',
+            is_active: true
+          }, { onConflict: 'email,contractor_id' });
 
-          console.log('✅ Staff Member record created');
-        } else {
-          throw new Error('ABC Plumbing Co. not found for staff member');
+        if (clientError) {
+          console.error('Client creation error:', clientError);
+          throw clientError;
         }
 
-      } else if (account.role === 'client') {
-        // Contractor Client: Find ABC Plumbing Co. and create client record
-        const { data: contractor } = await supabase
-          .from('contractors')
-          .select('id')
-          .eq('company_name', 'ABC Plumbing Co.')
-          .single();
+        console.log('✅ Contractor Client record created');
+      }
 
-        if (contractor) {
-          // We'll use the RPC function to create the client record since the table isn't in types
-          try {
-            const { error: rpcError } = await supabase.rpc('get_user_role', {
-              _user_id: user.id
-            });
-            
-            // If the RPC call works, we know the user exists
-            // For now, we'll just log that the client setup is attempted
-            console.log('✅ Contractor Client record processed (table creation needed)');
-          } catch (rpcErr) {
-            console.warn('Client record creation deferred until table is properly set up:', rpcErr);
-          }
-        } else {
-          throw new Error('ABC Plumbing Co. not found for client');
-        }
+      // Verify the role was set up correctly
+      const { data: roleData, error: roleError } = await supabase.rpc('get_user_role', {
+        _user_id: user.id
+      });
+
+      if (roleError) {
+        console.warn('Role verification failed:', roleError);
+      } else {
+        console.log('🎯 User role verified:', roleData);
       }
 
       toast({
         title: 'Success',
-        description: `Logged in as ${account.type}`
+        description: `Logged in as ${account.type}. Role: ${roleData || 'checking...'}`
       });
 
+      // Force a page refresh to trigger role detection
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000);
+
     } catch (error) {
-      console.error('Test login error:', error);
+      console.error('❌ Test login error:', error);
       toast({
         variant: 'destructive',
-        title: 'Error',
+        title: 'Setup Error',
         description: error instanceof Error ? error.message : 'Failed to create test account'
       });
     } finally {

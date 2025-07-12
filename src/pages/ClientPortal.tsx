@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useRole } from '@/hooks/useRole';
@@ -69,44 +68,87 @@ const ClientPortal = () => {
 
   const fetchClientData = async () => {
     try {
-      // For now, we'll create a mock client profile since the contractor_clients table
-      // isn't available in our TypeScript types yet
-      if (user?.email === 'suzanne@email.com') {
-        // Find ABC Plumbing Co. contractor
-        const { data: contractor } = await supabase
-          .from('contractors')
-          .select('id, company_name, contact_name')
-          .eq('company_name', 'ABC Plumbing Co.')
-          .single();
+      console.log('🔍 Fetching client data for user:', user?.email);
 
-        if (contractor) {
-          const mockProfile: ClientProfile = {
-            id: 'mock-client-id',
-            first_name: 'Suzanne',
-            last_name: 'Summers',
-            email: user.email,
-            phone: '(555) 123-4567',
-            address: '123 Main Street',
-            city: 'Toronto',
-            province: 'ON',
-            postal_code: 'M5V 3A8',
-            contractor_id: contractor.id,
-            contractor: {
-              company_name: contractor.company_name,
-              contact_name: contractor.contact_name
-            }
-          };
+      // Try to fetch from contractor_clients table first
+      const { data: clientData, error: clientError } = await supabase
+        .from('contractor_clients')
+        .select(`
+          *,
+          contractor:contractors!contractor_clients_contractor_id_fkey (
+            company_name,
+            contact_name
+          )
+        `)
+        .eq('user_id', user?.id)
+        .eq('is_active', true)
+        .single();
 
-          setProfile(mockProfile);
+      if (clientError) {
+        console.error('Error fetching client data:', clientError);
+        
+        // Fallback: create mock profile for Suzanne if user email matches
+        if (user?.email === 'suzanne@email.com') {
+          const { data: contractor } = await supabase
+            .from('contractors')
+            .select('id, company_name, contact_name')
+            .eq('company_name', 'ABC Plumbing Co.')
+            .single();
 
-          // Get client's invoices
-          const { data: invoiceData, error: invoiceError } = await supabase
-            .from('invoices')
-            .select('id, invoice_number, title, total, status, due_date, created_at')
-            .eq('contractor_id', contractor.id)
-            .order('created_at', { ascending: false });
+          if (contractor) {
+            const mockProfile: ClientProfile = {
+              id: 'mock-client-id',
+              first_name: 'Suzanne',
+              last_name: 'Summers',
+              email: user.email,
+              phone: '(555) 123-4567',
+              address: '123 Main Street',
+              city: 'Toronto',
+              province: 'ON',
+              postal_code: 'M5V 3A8',
+              contractor_id: contractor.id,
+              contractor: {
+                company_name: contractor.company_name,
+                contact_name: contractor.contact_name
+              }
+            };
+            setProfile(mockProfile);
+          }
+        }
+      } else {
+        console.log('✅ Client data fetched:', clientData);
+        
+        const clientProfile: ClientProfile = {
+          id: clientData.id,
+          first_name: clientData.first_name,
+          last_name: clientData.last_name,
+          email: clientData.email,
+          phone: clientData.phone || '',
+          address: clientData.address || '',
+          city: clientData.city || '',
+          province: clientData.province || '',
+          postal_code: clientData.postal_code || '',
+          contractor_id: clientData.contractor_id,
+          contractor: {
+            company_name: clientData.contractor.company_name,
+            contact_name: clientData.contractor.contact_name
+          }
+        };
+        
+        setProfile(clientProfile);
+      }
 
-          if (invoiceError) throw invoiceError;
+      // Fetch client's invoices if we have a profile
+      if (profile?.contractor_id) {
+        const { data: invoiceData, error: invoiceError } = await supabase
+          .from('invoices')
+          .select('id, invoice_number, title, total, status, due_date, created_at')
+          .eq('contractor_id', profile.contractor_id)
+          .order('created_at', { ascending: false });
+
+        if (invoiceError) {
+          console.error('Error fetching invoices:', invoiceError);
+        } else {
           setInvoices(invoiceData || []);
         }
       }

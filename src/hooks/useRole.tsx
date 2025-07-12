@@ -41,67 +41,19 @@ export const RoleProvider = ({ children }: { children: ReactNode }) => {
     console.log('🔍 Fetching role for user:', user.email, user.id);
 
     try {
-      // PHASE 1: Check if user is Platform Admin (Contractor Pro employee)
-      const { data: adminRoleData } = await supabase
-        .from('user_roles')
-        .select('role')
-        .eq('user_id', user.id)
-        .eq('role', 'admin')
-        .single();
-
-      if (adminRoleData) {
-        console.log('✅ User is Platform Admin (Contractor Pro employee)');
-        setUserRole('admin');
-        setLoading(false);
-        return;
-      }
-
-      // PHASE 2: Check if user is a Contractor Customer (paying customer)
-      const { data: contractorData } = await supabase
-        .from('contractors')
-        .select('id, is_platform_admin')
-        .eq('user_id', user.id)
-        .eq('is_platform_admin', false)
-        .single();
-
-      if (contractorData?.id) {
-        console.log('✅ User is a Contractor Customer (paying customer)');
-        setUserRole('contractor');
-        setLoading(false);
-        return;
-      }
-
-      // PHASE 3: Check if user is Staff Member (contractor employee)
-      const { data: staffData } = await supabase
-        .from('staff')
-        .select('id, contractor_id')
-        .eq('user_id', user.id)
-        .eq('is_active', true)
-        .single();
-
-      if (staffData?.id) {
-        console.log('✅ User is Staff Member (contractor employee)');
-        setUserRole('staff');
-        setLoading(false);
-        return;
-      }
-
-      // PHASE 4: Check if user is Contractor Client (end customer)
-      // Use the get_user_role function which now supports 'client' role
+      // Use the updated get_user_role function that now supports all 4 roles
       const { data: roleData, error: roleError } = await supabase.rpc('get_user_role', {
         _user_id: user.id
       });
 
-      if (!roleError && roleData && (roleData as string) === 'client') {
-        console.log('✅ User is Contractor Client (end customer)');
-        setUserRole('client');
-        setLoading(false);
-        return;
+      if (roleError) {
+        console.error('❌ Error fetching user role:', roleError);
+        setUserRole(null);
+      } else {
+        const role = roleData as UserRole;
+        console.log('✅ User role determined:', role);
+        setUserRole(role);
       }
-
-      // If no role found
-      console.log('⚠️ User has no assigned role');
-      setUserRole(null);
     } catch (error) {
       console.error('❌ Error fetching user role:', error);
       setUserRole(null);
